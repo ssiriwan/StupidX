@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BossGuard 3000 - เว็บอู้งานระดับพระกาฬ (Stupid Hackathon Edition)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- MediaPipe Face Mesh for Blink Detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+  
+  <!-- TensorFlow.js & COCO-SSD for Person / Boss Detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Prompt:wght@300;400;600;700&display=swap');
+    
+    body {
+      font-family: 'Prompt', sans-serif;
+      user-select: none;
+    }
+    
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Scanline effect for Cyberpunk Defense aesthetic */
+    .scanlines {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+      pointer-events: none;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e1e2e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #45475a;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #585b70;
+    }
+
+    /* Pulse animation for alert */
+    @keyframes panicPulse {
+      0%, 100% { border-color: rgba(239, 68, 68, 0.8); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+      50% { border-color: rgba(239, 68, 68, 0.2); box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
+    }
+    .panic-border {
+      animation: panicPulse 0.8s infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen overflow-x-hidden flex flex-col">
+
+  <!-- ========================================================
+       TOP NAVIGATION BAR
+       ======================================================== -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40 px-4 py-2.5 flex items-center justify-between shadow-md">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center shadow-lg shadow-red-500/20">
+        <i data-lucide="shield-alert" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-amber-400 via-orange-300 to-red-400 bg-clip-text text-transparent">
+            BossGuard 3000
+          </span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-red-950/80 text-red-400 border border-red-800/60 font-mono">
+            STUPID-EDITION
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-400">ระบบอู้งาน AI ตรวจจับเจ้านาย & บังคับหยุดคลิปเมื่อกระพริบตา</p>
+      </div>
+    </div>
+
+    <!-- Live Status Pill -->
+    <div class="flex items-center space-x-3">
+      <!-- Blink Status Indicator -->
+      <div id="blinkStatusBadge" class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800/50">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="blinkStatusText">ตาเปิดปกติ (EAR: 0.00)</span>
+      </div>
+
+      <!-- Boss Threat Badge -->
+      <div id="bossThreatBadge" class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono bg-slate-800 text-slate-300 border border-slate-700">
+        <i data-lucide="radar" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span id="bossThreatText">เรดาร์พร้อม: ปลอดภัย</span>
+      </div>
+
+      <!-- Manual Emergency Panic Button -->
+      <button id="manualPanicBtn" class="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs shadow-lg shadow-red-600/30 transition transform active:scale-95" title="กดปุ่มนี้เพื่อแกล้งทำเป็นเจ้านายมา (หรือกดปุ่ม B บนคีย์บอร์ด)">
+        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+        <span>PANIC! (กด B)</span>
+      </button>
+
+      <!-- Settings / Camera Toggle Button -->
+      <button id="toggleCameraHudBtn" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="เปิด/ปิด จอเรดาร์กล้อง">
+        <i data-lucide="camera" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       MAIN CHILL MODE (สภาวะอู้งานปกติ)
+       ======================================================== -->
+  <main id="chillModeContainer" class="flex-1 flex flex-col p-4 max-w-7xl mx-auto w-full gap-4 transition-opacity duration-200">
+    
+    <!-- Slacking Activity Selector Tabs -->
+    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+      <div class="flex space-x-2">
+        <button data-tab="youtube" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition bg-red-600/20 text-red-400 border border-red-500/30">
+          <i data-lucide="youtube" class="w-4 h-4"></i>
+          <span>YouTube Chill</span>
+        </button>
+        <button data-tab="localVideo" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <i data-lucide="file-video" class="w-4 h-4"></i>
+          <span>ดูไฟล์ในเครื่อง (.MP4)</span>
+        </button>
+        <button data-tab="minigame" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <i data-lucide="gamepad-2" class="w-4 h-4"></i>
+          <span>เกมงู 90s คลายเครียด</span>
+        </button>
+        <button data-tab="analytics" class="tab-btn flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span>สถิติการอู้สุดไร้สาระ</span>
+        </button>
+      </div>
+
+      <!-- Quick Tips -->
+      <div class="text-xs text-slate-400 hidden md:flex items-center space-x-4">
+        <span>💡 ลองหลับตาหรือกระพริบตา คลิปจะหยุดทันที!</span>
+        <span>🚨 ถ้ามีคนเดินผ่านกล้อง จอจะเปลี่ยนเป็น VS Code ทันที!</span>
+      </div>
+    </div>
+
+    <!-- ----------------------------------------------------
+         TAB 1: YOUTUBE PLAYER
+         ---------------------------------------------------- -->
+    <section id="tab-youtube" class="tab-content flex-1 flex flex-col gap-3">
+      <!-- Search & URL bar -->
+      <div class="flex flex-col sm:flex-row gap-2 bg-slate-900/80 p-3 rounded-2xl border border-slate-800 shadow-inner">
+        <div class="relative flex-1">
+          <i data-lucide="link" class="w-4 h-4 text-slate-500 absolute left-3 top-3"></i>
+          <input id="ytUrlInput" type="text" placeholder="วางลิงก์ YouTube ที่อยากดู (เช่น https://www.youtube.com/watch?v=dQw4w9WgXcQ)" 
+                 class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-red-500/80">
+        </div>
+        <button id="loadYtBtn" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl font-medium text-sm flex items-center justify-center space-x-2 shadow-lg shadow-red-600/20 transition">
+          <i data-lucide="play" class="w-4 h-4"></i>
+          <span>โหลดคลิป</span>
+        </button>
+        
+        <!-- Preset Funny Clips for Hackathon Demo -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pt-1 sm:pt-0">
+          <span class="text-xs text-slate-400 whitespace-nowrap">คลิปแนะนำ:</span>
+          <button class="preset-clip px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300" data-ytid="jfKfPfyJRdk">Lofi Chill</button>
+          <button class="preset-clip px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300" data-ytid="dQw4w9WgXcQ">Rickroll</button>
+          <button class="preset-clip px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300" data-ytid="fC7oUOUEEi4">แมวเต้น</button>
+        </div>
+      </div>
+
+      <!-- YouTube Player Container -->
+      <div class="relative flex-1 bg-black rounded-2xl overflow-hidden border border-slate-800 min-h-[480px] shadow-2xl flex items-center justify-center">
+        <div id="ytPlayerContainer" class="w-full h-full"></div>
+        
+        <!-- Overlay HUD when Eye Closes / Blink Detected -->
+        <div id="blinkPauseOverlay" class="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center z-20 opacity-0 pointer-events-none transition-opacity duration-150">
+          <div class="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center mb-3 animate-bounce">
+            <i data-lucide="eye-off" class="w-8 h-8 text-amber-400"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-amber-400">หยุดวิดีโอเพื่อกันพลาดช็อตสำคัญ!</h3>
+          <p class="text-sm text-slate-300 mt-1">ระบบตรวจพบว่าคุณหลับตา/กระพริบตา (Anti-FOMO Active)</p>
+          <div class="mt-4 px-3 py-1 bg-amber-950/80 border border-amber-800 rounded-full text-xs font-mono text-amber-300">
+            ลืมตาขึ้นมาเพื่อดูต่อทันที 👀
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------
+         TAB 2: LOCAL VIDEO PLAYER (.MP4)
+         ---------------------------------------------------- -->
+    <section id="tab-localVideo" class="tab-content flex-1 hidden flex-col gap-3">
+      <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+        <div>
+          <h4 class="font-bold text-sm text-slate-200">เปิดดูไฟล์วิดีโอในเครื่อง (MP4/WebM)</h4>
+          <p class="text-xs text-slate-400">ไฟล์เล่นในเบราว์เซอร์ของคุณ ไม่ถูกอัปโหลดขึ้นเน็ต ปลอดภัย 100%</p>
+        </div>
+        <label class="cursor-pointer px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center space-x-2 transition shadow-lg shadow-indigo-600/20">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          <span>เลือกไฟล์วิดีโอ</span>
+          <input id="localVideoInput" type="file" accept="video/*" class="hidden">
+        </label>
+      </div>
+
+      <div class="relative flex-1 bg-black rounded-2xl overflow-hidden border border-slate-800 min-h-[480px] shadow-2xl flex items-center justify-center">
+        <video id="nativeVideoPlayer" class="w-full h-full max-h-[650px] object-contain" controls></video>
+        
+        <div id="noVideoPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500">
+          <i data-lucide="clapperboard" class="w-16 h-16 stroke-1 mb-2"></i>
+          <p class="text-sm">ยังไม่ได้เลือกไฟล์วิดีโอ (คลิกปุ่ม "เลือกไฟล์วิดีโอ" ด้านบน)</p>
+        </div>
+
+        <!-- Local Blink Pause Overlay -->
+        <div id="localBlinkOverlay" class="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center z-20 opacity-0 pointer-events-none transition-opacity duration-150">
+          <div class="w-16 h-16 rounded-full bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center mb-3 animate-bounce">
+            <i data-lucide="eye-off" class="w-8 h-8 text-cyan-400"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-cyan-400">PAUSED: ตาปิดอยู่!</h3>
+          <p class="text-sm text-slate-300 mt-1">ระบบหยุดวิดีโอไว้จนกว่าคุณจะลืมตา</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------
+         TAB 3: RETRO SNAKE MINI-GAME
+         ---------------------------------------------------- -->
+    <section id="tab-minigame" class="tab-content flex-1 hidden flex-col items-center justify-center gap-3">
+      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex items-center justify-between w-full max-w-xl">
+        <div>
+          <h4 class="font-bold text-sm text-amber-400">Classic Snake 90s</h4>
+          <p class="text-xs text-slate-400">ใช้ปุ่มลูกศร (Arrow Keys) บนคีย์บอร์ดบังคับ</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="text-right">
+            <span class="text-xs text-slate-500 block">SCORE</span>
+            <span id="snakeScore" class="font-mono font-bold text-lg text-emerald-400">0</span>
+          </div>
+          <button id="restartSnakeBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-200 border border-slate-700">
+            เริ่มใหม่
+          </button>
+        </div>
+      </div>
+
+      <div class="relative bg-slate-950 border-2 border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+        <canvas id="snakeCanvas" width="500" height="400" class="block bg-slate-950"></canvas>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------
+         TAB 4: STUPID SLACKING ANALYTICS
+         ---------------------------------------------------- -->
+    <section id="tab-analytics" class="tab-content flex-1 hidden flex-col gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Stat Card 1 -->
+        <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">กระพริบตาทั้งหมด</span>
+            <i data-lucide="eye" class="w-4 h-4 text-cyan-400"></i>
+          </div>
+          <div id="statBlinkCount" class="text-3xl font-bold font-mono text-cyan-400">0</div>
+          <p class="text-[11px] text-slate-500 mt-1">ครั้งที่รอดพ้นจากการพลาดเนื้อหา</p>
+        </div>
+
+        <!-- Stat Card 2 -->
+        <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">เวลาที่เซฟไว้ได้</span>
+            <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div id="statTimeSaved" class="text-3xl font-bold font-mono text-emerald-400">0.0 วินาที</div>
+          <p class="text-[11px] text-slate-500 mt-1">เนื้อหาวิดีโอที่สายตาไม่ได้สัมผัส</p>
+        </div>
+
+        <!-- Stat Card 3 -->
+        <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">หลบเจ้านายสำเร็จ</span>
+            <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <div id="statBossDodged" class="text-3xl font-bold font-mono text-amber-400">0</div>
+          <p class="text-[11px] text-slate-500 mt-1">ครั้งที่สลับเป็นหน้าจอทำงานทันเวลา</p>
+        </div>
+
+        <!-- Stat Card 4 -->
+        <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">ประสิทธิภาพการอู้</span>
+            <i data-lucide="sparkles" class="w-4 h-4 text-pink-400"></i>
+          </div>
+          <div class="text-3xl font-bold font-mono text-pink-400">99.8%</div>
+          <p class="text-[11px] text-slate-500 mt-1">ระดับความเนียนขั้นสูงสุด</p>
+        </div>
+      </div>
+
+      <!-- Settings & Calibration -->
+      <div class="bg-slate-900/70 border border-slate-800 p-6 rounded-2xl mt-2">
+        <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center space-x-2">
+          <i data-lucide="sliders" class="w-5 h-5 text-indigo-400"></i>
+          <span>การตั้งค่าความไวของ AI (Sensitivity Calibration)</span>
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-300">ความไวตรวจจับกระพริบตา (EAR Threshold):</span>
+              <span id="earValDisplay" class="font-mono text-indigo-400 font-bold">0.18</span>
+            </div>
+            <input id="earSlider" type="range" min="0.10" max="0.30" step="0.01" value="0.18" class="w-full accent-indigo-500 cursor-pointer">
+            <p class="text-xs text-slate-500 mt-1">ถ้าใส่แว่นแล้วตาเล็ก ให้ลองเลื่อนลดลงมาที่ 0.14 - 0.16</p>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-300">หน่วงเวลาหลังเจ้านายเดินออก (Safety Cooldown):</span>
+              <span id="cooldownDisplay" class="font-mono text-amber-400 font-bold">3.0 วินาที</span>
+            </div>
+            <input id="cooldownSlider" type="range" min="1.0" max="8.0" step="0.5" value="3.0" class="w-full accent-amber-500 cursor-pointer">
+            <p class="text-xs text-slate-500 mt-1">ป้องกันเจ้านายหันควับกลับมามองกะทันหัน</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================
+       EMERGENCY CAMOUFLAGE OVERLAY (PANIC WORK MODE)
+       เมื่อเจ้านายมา หน้านี้จะเด้งทับเต็มจอ 100% ทันที
+       ======================================================== -->
+  <div id="camouflageOverlay" class="fixed inset-0 z-50 bg-[#1e1e1e] text-slate-200 flex flex-col opacity-0 pointer-events-none transition-opacity duration-75 select-text">
+    
+    <!-- Top VS Code / Camouflage Header -->
+    <div class="bg-[#323233] text-xs text-slate-300 px-3 py-1.5 flex items-center justify-between border-b border-[#252526]">
+      <div class="flex items-center space-x-4">
+        <span class="flex items-center space-x-1.5 font-semibold text-sky-400">
+          <i data-lucide="code-2" class="w-4 h-4"></i>
+          <span>Visual Studio Code - enterprise_neural_engine [Workspace]</span>
+        </span>
+        <div class="hidden sm:flex space-x-3 text-slate-400 text-[11px]">
+          <span>File</span>
+          <span>Edit</span>
+          <span>Selection</span>
+          <span>View</span>
+          <span>Go</span>
+          <span>Run</span>
+          <span>Terminal</span>
+          <span>Help</span>
+        </div>
+      </div>
+
+      <!-- Secret Cooldown / Boss Threat Monitor Pill -->
+      <div class="flex items-center space-x-2">
+        <div id="camoRadarIndicator" class="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-red-950/80 text-red-300 text-[11px] font-mono border border-red-800">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          <span id="camoRadarText">🚨 BOSS DETECTED IN CAMERA!</span>
+        </div>
+        <button id="exitPanicManualBtn" class="text-[10px] text-slate-500 hover:text-slate-300 px-1.5 py-0.5 rounded bg-[#252526]" title="คลิกเพื่อออกจากโหมดพรางตัวทันที">
+          [ESC] ออก
+        </button>
+      </div>
+    </div>
+
+    <!-- VS Code Body -->
+    <div class="flex-1 flex overflow-hidden">
+      <!-- Activity Bar -->
+      <div class="w-12 bg-[#333333] flex flex-col items-center py-3 space-y-4 text-slate-400 border-r border-[#252526]">
+        <i data-lucide="files" class="w-5 h-5 text-white cursor-pointer"></i>
+        <i data-lucide="search" class="w-5 h-5 cursor-pointer hover:text-white"></i>
+        <i data-lucide="git-branch" class="w-5 h-5 cursor-pointer hover:text-white"></i>
+        <i data-lucide="play-circle" class="w-5 h-5 cursor-pointer hover:text-white"></i>
+        <i data-lucide="box" class="w-5 h-5 cursor-pointer hover:text-white"></i>
+      </div>
+
+      <!-- File Explorer Sidebar -->
+      <div class="w-56 bg-[#252526] border-r border-[#19191a] text-xs flex flex-col hidden md:flex">
+        <div class="p-2 font-bold uppercase tracking-wider text-[10px] text-slate-400 flex justify-between items-center">
+          <span>EXPLORER: PROJECT</span>
+        </div>
+        <div class="space-y-1 px-2 text-slate-300">
+          <div class="flex items-center space-x-1 py-1 px-1 rounded bg-[#37373d] text-sky-300 font-semibold cursor-pointer">
+            <i data-lucide="file-code" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>neural_optimizer.rs</span>
+          </div>
+          <div class="flex items-center space-x-1 py-1 px-1 rounded hover:bg-[#2a2d2e] cursor-pointer text-slate-400">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>database_pool.go</span>
+          </div>
+          <div class="flex items-center space-x-1 py-1 px-1 rounded hover:bg-[#2a2d2e] cursor-pointer text-slate-400">
+            <i data-lucide="file" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Cargo.toml</span>
+          </div>
+          <div class="flex items-center space-x-1 py-1 px-1 rounded hover:bg-[#2a2d2e] cursor-pointer text-slate-400">
+            <i data-lucide="file-json" class="w-3.5 h-3.5 text-yellow-400"></i>
+            <span>docker-compose.yml</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Editor Area (HACKER TYPER ENGINE) -->
+      <div class="flex-1 flex flex-col bg-[#1e1e1e] overflow-hidden">
+        <!-- Editor Tabs -->
+        <div class="bg-[#2d2d2d] flex items-center border-b border-[#1e1e1e] text-xs">
+          <div class="bg-[#1e1e1e] text-sky-400 px-4 py-2 border-t-2 border-sky-400 flex items-center space-x-2 font-mono">
+            <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
+            <span>neural_optimizer.rs</span>
+            <span class="text-slate-500 hover:text-white cursor-pointer ml-2">×</span>
+          </div>
+          <div class="text-slate-400 px-4 py-2 hover:bg-[#252526] flex items-center space-x-2 font-mono cursor-pointer">
+            <span>database_pool.go</span>
+          </div>
+        </div>
+
+        <!-- Code Content (HackerTyper logic) -->
+        <div id="editorContent" class="flex-1 p-4 font-mono text-sm leading-relaxed overflow-y-auto select-text focus:outline-none" tabindex="0">
+          <div class="text-slate-500 mb-2">// ========================================================</div>
+          <div class="text-slate-500 mb-2">// HIGH PERFORMANCE ASYNCHRONOUS QUANTUM ENGINE</div>
+          <div class="text-slate-500 mb-4">// PRESS ANY KEY TO TYPE COMPLEX CODE FRANTICALLY!</div>
+          <pre id="hackerTyperCode" class="text-emerald-400 whitespace-pre-wrap font-mono"></pre>
+          <span class="inline-block w-2.5 h-5 bg-sky-400 animate-pulse ml-0.5 align-middle"></span>
+        </div>
+
+        <!-- Fake Terminal Drawer -->
+        <div class="h-44 bg-[#181818] border-t border-[#333] flex flex-col font-mono text-xs">
+          <div class="bg-[#252526] px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-400">
+            <div class="flex space-x-4">
+              <span class="text-white border-b border-sky-400 pb-0.5 cursor-pointer">TERMINAL</span>
+              <span class="cursor-pointer hover:text-white">OUTPUT</span>
+              <span class="cursor-pointer hover:text-white">DEBUG CONSOLE</span>
+              <span class="cursor-pointer hover:text-white">PROBLEMS (0)</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-emerald-400">● bash</span>
+            </div>
+          </div>
+          <div id="fakeTerminalLogs" class="flex-1 p-3 text-slate-300 overflow-y-auto space-y-1">
+            <div class="text-emerald-400">$ cargo build --release --features=simd,quantum_accel</div>
+            <div class="text-slate-400">[1/84] Compiling core_allocator v3.4.1...</div>
+            <div class="text-slate-400">[2/84] Linking dynamic tensor matrices...</div>
+            <div class="text-sky-400">[INFO] Optimizing assembly instructions for AVX-512...</div>
+            <div class="text-amber-400">[WARN] Heap memory allocation running at 94.2% efficiency</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="bg-[#007acc] text-white px-3 py-0.5 text-[11px] flex items-center justify-between font-mono">
+      <div class="flex items-center space-x-4">
+        <span>master*</span>
+        <span>0 errors, 0 warnings</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span>Ln 342, Col 82</span>
+        <span>Spaces: 4</span>
+        <span>UTF-8</span>
+        <span>Rust (edition 2021)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       FLOATING WEBCAM RADAR & DETECTION HUD
+       หน้าต่างกล้องจิ๋วแสดงสถานะ AI (ย้าย/ซ่อนได้)
+       ======================================================== -->
+  <aside id="cameraHudWindow" class="fixed bottom-4 right-4 z-40 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden w-72 backdrop-blur transition-all duration-200">
+    <!-- Camera Window Header -->
+    <div class="px-3 py-2 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between text-xs cursor-move">
+      <div class="flex items-center space-x-2 font-mono font-bold text-slate-300">
+        <i data-lucide="aperture" class="w-3.5 h-3.5 text-cyan-400 animate-spin" style="animation-duration: 8s;"></i>
+        <span>AI RADAR MIRROR</span>
+      </div>
+      <div class="flex items-center space-x-1">
+        <button id="minimizeHudBtn" class="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white">
+          <i data-lucide="minus" class="w-3 h-3"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Camera Viewport & Overlay Canvas -->
+    <div class="relative w-full aspect-video bg-black overflow-hidden flex items-center justify-center">
+      <!-- Hidden Native Video for processing -->
+      <video id="webcamVideo" class="absolute inset-0 w-full h-full object-cover -scale-x-100 opacity-40" playsinline muted autoplay></video>
+      <!-- Visual Canvas with Landmarks & Bounding Boxes -->
+      <canvas id="detectionCanvas" class="absolute inset-0 w-full h-full object-cover -scale-x-100 z-10"></canvas>
+
+      <!-- Loading Spinner for AI Models -->
+      <div id="aiLoadingOverlay" class="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-3 text-center z-20">
+        <div class="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mb-2"></div>
+        <span class="text-xs font-semibold text-cyan-300">กำลังโหลดโมเดล AI...</span>
+        <span id="aiLoadingProgress" class="text-[10px] text-slate-400 mt-0.5">MediaPipe & COCO-SSD</span>
+      </div>
+    </div>
+
+    <!-- Realtime Telemetry info -->
+    <div class="p-2.5 bg-slate-950/90 border-t border-slate-800 text-[11px] font-mono space-y-1">
+      <div class="flex justify-between">
+        <span class="text-slate-400">Person Count:</span>
+        <span id="telemetryPersons" class="text-emerald-400 font-bold">1 (ปลอดภัย)</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-400">Eye Openness (EAR):</span>
+        <span id="telemetryEar" class="text-cyan-400 font-bold">0.26</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-400">System Mode:</span>
+        <span id="telemetryMode" class="text-emerald-400 font-bold">CHILLING</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================
+       JAVASCRIPT LOGIC
+       ======================================================== -->
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // --------------------------------------------------------
+    // STATE & VARIABLES
+    // --------------------------------------------------------
+    const state = {
+      isBossDetected: false,
+      isEyeClosed: false,
+      bossCooldownRemaining: 0,
+      safetyCooldownSeconds: 3.0,
+      earThreshold: 0.18,
+      personCount: 0,
+      detectedFaces: 0,
+      
+      // Analytics stats
+      blinkCount: 0,
+      totalSavedTimeSec: 0,
+      bossDodgedCount: 0,
+      
+      // Players
+      activeTab: 'youtube',
+      ytPlayerReady: false,
+      isYtPausedByBlink: false,
+      isLocalPausedByBlink: false,
+      currentYtVideoId: 'jfKfPfyJRdk' // default Lofi clip
+    };
+
+    // DOM Elements
+    const elements = {
+      webcamVideo: document.getElementById('webcamVideo'),
+      detectionCanvas: document.getElementById('detectionCanvas'),
+      aiLoadingOverlay: document.getElementById('aiLoadingOverlay'),
+      aiLoadingProgress: document.getElementById('aiLoadingProgress'),
+      
+      // Status badges
+      blinkStatusBadge: document.getElementById('blinkStatusBadge'),
+      blinkStatusText: document.getElementById('blinkStatusText'),
+      bossThreatBadge: document.getElementById('bossThreatBadge'),
+      bossThreatText: document.getElementById('bossThreatText'),
+      
+      // Overlays
+      chillModeContainer: document.getElementById('chillModeContainer'),
+      camouflageOverlay: document.getElementById('camouflageOverlay'),
+      camoRadarText: document.getElementById('camoRadarText'),
+      blinkPauseOverlay: document.getElementById('blinkPauseOverlay'),
+      localBlinkOverlay: document.getElementById('localBlinkOverlay'),
+      
+      // Telemetry
+      telemetryPersons: document.getElementById('telemetryPersons'),
+      telemetryEar: document.getElementById('telemetryEar'),
+      telemetryMode: document.getElementById('telemetryMode'),
+      
+      // Analytics
+      statBlinkCount: document.getElementById('statBlinkCount'),
+      statTimeSaved: document.getElementById('statTimeSaved'),
+      statBossDodged: document.getElementById('statBossDodged'),
+      
+      // Local Video
+      localVideoInput: document.getElementById('localVideoInput'),
+      nativeVideoPlayer: document.getElementById('nativeVideoPlayer'),
+      noVideoPlaceholder: document.getElementById('noVideoPlaceholder'),
+      
+      // HackerTyper
+      hackerTyperCode: document.getElementById('hackerTyperCode'),
+      editorContent: document.getElementById('editorContent'),
+      fakeTerminalLogs: document.getElementById('fakeTerminalLogs'),
+      
+      // Buttons
+      manualPanicBtn: document.getElementById('manualPanicBtn'),
+      exitPanicManualBtn: document.getElementById('exitPanicManualBtn'),
+      toggleCameraHudBtn: document.getElementById('toggleCameraHudBtn'),
+      minimizeHudBtn: document.getElementById('minimizeHudBtn'),
+      cameraHudWindow: document.getElementById('cameraHudWindow'),
+      
+      // Sliders
+      earSlider: document.getElementById('earSlider'),
+      earValDisplay: document.getElementById('earValDisplay'),
+      cooldownSlider: document.getElementById('cooldownSlider'),
+      cooldownDisplay: document.getElementById('cooldownDisplay'),
+      
+      // YouTube input
+      ytUrlInput: document.getElementById('ytUrlInput'),
+      loadYtBtn: document.getElementById('loadYtBtn')
+    };
+
+    // --------------------------------------------------------
+    // AUDIO SYNTHESIZER (MECHANICAL KEYBOARD SOUNDS)
+    // --------------------------------------------------------
+    let audioCtx = null;
+    function playFakeKeyboardClack() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        // Generate authentic subtle mechanical click
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle';
+        const freqs = [180, 240, 310, 420, 520];
+        osc.frequency.setValueAtTime(freqs[Math.floor(Math.random() * freqs.length)], audioCtx.currentTime);
+        
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } catch (e) {
+        // AudioContext silent fail
+      }
+    }
+
+    // --------------------------------------------------------
+    // YOUTUBE IFRAME SETUP
+    // --------------------------------------------------------
+    let ytPlayer = null;
+    window.onYouTubeIframeAPIReady = function() {
+      ytPlayer = new YT.Player('ytPlayerContainer', {
+        height: '100%',
+        width: '100%',
+        videoId: state.currentYtVideoId,
+        playerVars: {
+          'playsinline': 1,
+          'autoplay': 1,
+          'rel': 0
+        },
+        events: {
+          'onReady': () => {
+            state.ytPlayerReady = true;
+          }
+        }
+      });
+    };
+
+    function extractYtVideoId(url) {
+      if (!url) return null;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : url;
+    }
+
+    elements.loadYtBtn.addEventListener('click', () => {
+      const input = elements.ytUrlInput.value.trim();
+      const id = extractYtVideoId(input);
+      if (id && ytPlayer && ytPlayer.loadVideoById) {
+        state.currentYtVideoId = id;
+        ytPlayer.loadVideoById(id);
+      }
+    });
+
+    document.querySelectorAll('.preset-clip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-ytid');
+        if (id && ytPlayer && ytPlayer.loadVideoById) {
+          state.currentYtVideoId = id;
+          ytPlayer.loadVideoById(id);
+        }
+      });
+    });
+
+    // --------------------------------------------------------
+    // LOCAL VIDEO FILE HANDLER
+    // --------------------------------------------------------
+    elements.localVideoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const fileUrl = URL.createObjectURL(file);
+        elements.nativeVideoPlayer.src = fileUrl;
+        elements.noVideoPlaceholder.classList.add('hidden');
+        elements.nativeVideoPlayer.play();
+      }
+    });
+
+    // --------------------------------------------------------
+    // TAB NAVIGATION
+    // --------------------------------------------------------
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        state.activeTab = tab;
+
+        // Update Button styles
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.className = 'tab-btn flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60';
+        });
+        btn.className = 'tab-btn flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition bg-red-600/20 text-red-400 border border-red-500/30';
+
+        // Toggle Tab Contents
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+        document.getElementById(`tab-${tab}`).classList.remove('hidden');
+
+        if (tab === 'minigame') initSnakeGame();
+      });
+    });
+
+    // --------------------------------------------------------
+    // RETRO SNAKE MINI-GAME
+    // --------------------------------------------------------
+    let snakeInterval = null;
+    function initSnakeGame() {
+      const canvas = document.getElementById('snakeCanvas');
+      const ctx = canvas.getContext('2d');
+      const grid = 20;
+      let count = 0;
+      let score = 0;
+      
+      let snake = {
+        x: 160,
+        y: 160,
+        dx: grid,
+        dy: 0,
+        cells: [],
+        maxCells: 4
+      };
+      let apple = { x: 320, y: 320 };
+
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+      }
+
+      function loop() {
+        if (state.isBossDetected) return; // Pause game if Boss detected!
+
+        snakeInterval = requestAnimationFrame(loop);
+        if (++count < 6) return; // Speed control
+        count = 0;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        snake.x += snake.dx;
+        snake.y += snake.dy;
+
+        // Wrap edges
+        if (snake.x < 0) snake.x = canvas.width - grid;
+        else if (snake.x >= canvas.width) snake.x = 0;
+        if (snake.y < 0) snake.y = canvas.height - grid;
+        else if (snake.y >= canvas.height) snake.y = 0;
+
+        snake.cells.unshift({ x: snake.x, y: snake.y });
+        if (snake.cells.length > snake.maxCells) snake.cells.pop();
+
+        // Draw Apple
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+
+        // Draw Snake
+        ctx.fillStyle = '#10b981';
+        snake.cells.forEach((cell, index) => {
+          ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+
+          // Eat apple
+          if (cell.x === apple.x && cell.y === apple.y) {
+            snake.maxCells++;
+            score += 10;
+            document.getElementById('snakeScore').innerText = score;
+            apple.x = getRandomInt(0, 25) * grid;
+            apple.y = getRandomInt(0, 20) * grid;
+          }
+
+          // Self collision
+          for (let i = index + 1; i < snake.cells.length; i++) {
+            if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+              snake.x = 160;
+              snake.y = 160;
+              snake.cells = [];
+              snake.maxCells = 4;
+              snake.dx = grid;
+              snake.dy = 0;
+              score = 0;
+              document.getElementById('snakeScore').innerText = score;
+            }
+          }
+        });
+      }
+
+      window.onkeydown = function(e) {
+        if (e.key === 'ArrowLeft' && snake.dx === 0) { snake.dx = -grid; snake.dy = 0; }
+        else if (e.key === 'ArrowUp' && snake.dy === 0) { snake.dy = -grid; snake.dx = 0; }
+        else if (e.key === 'ArrowRight' && snake.dx === 0) { snake.dx = grid; snake.dy = 0; }
+        else if (e.key === 'ArrowDown' && snake.dy === 0) { snake.dy = grid; snake.dx = 0; }
+      };
+
+      if (snakeInterval) cancelAnimationFrame(snakeInterval);
+      snakeInterval = requestAnimationFrame(loop);
+    }
+    document.getElementById('restartSnakeBtn')?.addEventListener('click', initSnakeGame);
+
+    // --------------------------------------------------------
+    // HACKER TYPER CODE GENERATOR (COOL REALISTIC CODE)
+    // --------------------------------------------------------
+    const fakeCodeSnippets = [
+      `pub async fn synchronize_quantum_registers(&mut self) -> Result<(), QuantumError> {\n`,
+      `    let mut stream = self.ipc_channel.lock().await;\n`,
+      `    let signature = CryptoHash::compute_sha256(&self.buffer)?;\n`,
+      `    unsafe {\n`,
+      `        asm!("prefetchw [{0}]", in(reg) &self.raw_kernel_matrix);\n`,
+      `    }\n`,
+      `    info!("Flushing L3 Cache cachelines... Status: 200 OK");\n`,
+      `    Ok(())\n}\n\n`,
+      `fn evaluate_tensor_derivatives(weights: &[f64; 1024]) -> Matrix4x4 {\n`,
+      `    let simd_vector = f64x8::from_slice(&weights[0..8]);\n`,
+      `    let gradient = simd_vector.mul_add(ALPHA_COEFFICIENT, BIAS_REG);\n`,
+      `    debug!("Backprop delta converged at epsilon 1e-9");\n`,
+      `    gradient.into_matrix()\n}\n\n`,
+      `// High priority thread scheduled for parallel compute\n`,
+      `#[inline(always)]\n`,
+      `pub fn dispatch_event_loop() {\n`,
+      `    while let Some(msg) = QUEUE.pop() {\n`,
+      `        process_packet(msg);\n`,
+      `    }\n}\n\n`
+    ];
+    let codeIndex = 0;
+    let typedCode = "";
+
+    function appendHackerCode() {
+      const snippet = fakeCodeSnippets[codeIndex % fakeCodeSnippets.length];
+      typedCode += snippet;
+      elements.hackerTyperCode.textContent = typedCode;
+      elements.editorContent.scrollTop = elements.editorContent.scrollHeight;
+      codeIndex++;
+      playFakeKeyboardClack();
+    }
+
+    // Auto-scroll terminal logs
+    setInterval(() => {
+      if (state.isBossDetected) {
+        const log = document.createElement('div');
+        log.className = 'text-slate-400';
+        const randId = Math.floor(Math.random() * 800) + 100;
+        log.textContent = `[Worker-${Math.floor(Math.random()*8)}] Processed batch #${randId} in ${(Math.random()*4).toFixed(2)}ms`;
+        elements.fakeTerminalLogs.appendChild(log);
+        if (elements.fakeTerminalLogs.children.length > 25) {
+          elements.fakeTerminalLogs.removeChild(elements.fakeTerminalLogs.children[1]);
+        }
+        elements.fakeTerminalLogs.scrollTop = elements.fakeTerminalLogs.scrollHeight;
+      }
+    }, 1200);
+
+    // --------------------------------------------------------
+    // EYE ASPECT RATIO (EAR) CALCULATION FOR BLINK DETECTION
+    // --------------------------------------------------------
+    function calculateDistance(p1, p2) {
+      return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+    }
+
+    function calculateEAR(landmarks) {
+      // Left eye landmarks
+      // 159 (upper), 145 (lower), 33 (outer), 133 (inner)
+      const leftDistVertical = calculateDistance(landmarks[159], landmarks[145]);
+      const leftDistHorizontal = calculateDistance(landmarks[33], landmarks[133]);
+      const leftEAR = leftDistVertical / (leftDistHorizontal || 1e-6);
+
+      // Right eye landmarks
+      // 386 (upper), 374 (lower), 362 (inner), 263 (outer)
+      const rightDistVertical = calculateDistance(landmarks[386], landmarks[374]);
+      const rightDistHorizontal = calculateDistance(landmarks[362], landmarks[263]);
+      const rightEAR = rightDistVertical / (rightDistHorizontal || 1e-6);
+
+      return (leftEAR + rightEAR) / 2.0;
+    }
+
+    // --------------------------------------------------------
+    // TRIGGER LOGIC: BLINK-TO-PAUSE (ANTI-FOMO)
+    // --------------------------------------------------------
+    function handleBlinkChange(isClosed, earValue) {
+      state.isEyeClosed = isClosed;
+      
+      elements.telemetryEar.innerText = earValue.toFixed(3);
+      
+      if (isClosed) {
+        // EYES CLOSED / BLINKING
+        elements.blinkStatusBadge.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono bg-amber-950/80 text-amber-300 border border-amber-800/80';
+        elements.blinkStatusText.innerText = `👀 ตาปิด/กระพริบ (EAR: ${earValue.toFixed(2)})`;
+        
+        elements.blinkPauseOverlay.style.opacity = '1';
+        elements.localBlinkOverlay.style.opacity = '1';
+
+        // Pause YouTube if playing
+        if (state.ytPlayerReady && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === 1) {
+          ytPlayer.pauseVideo();
+          state.isYtPausedByBlink = true;
+        }
+
+        // Pause Local Video if playing
+        if (!elements.nativeVideoPlayer.paused) {
+          elements.nativeVideoPlayer.pause();
+          state.isLocalPausedByBlink = true;
+        }
+
+        // Increment stats
+        state.blinkCount++;
+        state.totalSavedTimeSec += 0.3; // approx 300ms per blink
+        elements.statBlinkCount.innerText = state.blinkCount;
+        elements.statTimeSaved.innerText = state.totalSavedTimeSec.toFixed(1) + ' วินาที';
+
+      } else {
+        // EYES OPEN
+        elements.blinkStatusBadge.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800/50';
+        elements.blinkStatusText.innerText = `ตาเปิดปกติ (EAR: ${earValue.toFixed(2)})`;
+
+        elements.blinkPauseOverlay.style.opacity = '0';
+        elements.localBlinkOverlay.style.opacity = '0';
+
+        // Resume YouTube if was paused by blink
+        if (state.isYtPausedByBlink && !state.isBossDetected) {
+          if (ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
+          state.isYtPausedByBlink = false;
+        }
+
+        // Resume Local Video
+        if (state.isLocalPausedByBlink && !state.isBossDetected) {
+          elements.nativeVideoPlayer.play();
+          state.isLocalPausedByBlink = false;
+        }
+      }
+    }
+
+    // --------------------------------------------------------
+    // TRIGGER LOGIC: BOSS / PANIC MODE
+    // --------------------------------------------------------
+    function setBossAlert(isAlert) {
+      if (isAlert) {
+        if (!state.isBossDetected) {
+          state.bossDodgedCount++;
+          elements.statBossDodged.innerText = state.bossDodgedCount;
+        }
+
+        state.isBossDetected = true;
+        state.bossCooldownRemaining = state.safetyCooldownSeconds;
+
+        // Visuals
+        elements.bossThreatBadge.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono bg-red-950 text-red-400 border border-red-600 animate-pulse';
+        elements.bossThreatText.innerText = '🚨 เจ้านายมา! (EMERGENCY)';
+        elements.telemetryMode.innerText = '🚨 WORK CAMOUFLAGE';
+        elements.telemetryMode.className = 'text-red-400 font-bold';
+
+        // MUTE ALL AUDIO IMMEDIATELY!
+        if (ytPlayer && ytPlayer.mute) ytPlayer.mute();
+        elements.nativeVideoPlayer.muted = true;
+
+        // SHOW FULLSCREEN CAMOUFLAGE
+        elements.camouflageOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        elements.camouflageOverlay.classList.add('opacity-100');
+        elements.camoRadarText.innerText = `🚨 BOSS DETECTED IN CAMERA! (${state.personCount} PERSONS)`;
+        
+        // Focus editor for instant hacker typing
+        elements.editorContent.focus();
+
+      } else {
+        // Person left, but run safety cooldown first
+        if (state.bossCooldownRemaining > 0) {
+          state.bossCooldownRemaining -= 0.1;
+          elements.bossThreatText.innerText = `รอตรวจความปลอดภัย... (${state.bossCooldownRemaining.toFixed(1)}s)`;
+          elements.camoRadarText.innerText = `⏳ เจ้านายเพิ่งเดินออก... รอ ${state.bossCooldownRemaining.toFixed(1)}s`;
+          return;
+        }
+
+        // Fully cleared!
+        state.isBossDetected = false;
+        elements.bossThreatBadge.className = 'flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/70 text-emerald-400 border border-emerald-800';
+        elements.bossThreatText.innerText = 'เรดาร์พร้อม: ปลอดภัย';
+        elements.telemetryMode.innerText = 'CHILLING';
+        elements.telemetryMode.className = 'text-emerald-400 font-bold';
+
+        // HIDE CAMOUFLAGE
+        elements.camouflageOverlay.classList.add('opacity-0', 'pointer-events-none');
+        elements.camouflageOverlay.classList.remove('opacity-100');
+
+        // UNMUTE AUDIO
+        if (ytPlayer && ytPlayer.unMute) ytPlayer.unMute();
+        elements.nativeVideoPlayer.muted = false;
+      }
+    }
+
+    // --------------------------------------------------------
+    // AI DETECTION PIPELINE (MEDIAPIPE + COCO-SSD)
+    // --------------------------------------------------------
+    let faceMeshModel = null;
+    let cocoModel = null;
+    let cameraInstance = null;
+    let lastCocoDetectTime = 0;
+
+    async function initAIModels() {
+      try {
+        elements.aiLoadingProgress.innerText = '1/2 กำลังเตรียม MediaPipe FaceMesh...';
+        
+        // 1. Setup MediaPipe FaceMesh
+        faceMeshModel = new FaceMesh({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+
+        faceMeshModel.setOptions({
+          maxNumFaces: 4, // detect multiple faces looking at screen
+          refineLandmarks: true,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+
+        faceMeshModel.onResults(onFaceMeshResults);
+
+        elements.aiLoadingProgress.innerText = '2/2 กำลังโหลด COCO-SSD Person Detector...';
+        
+        // 2. Setup COCO-SSD for Person Detection
+        cocoModel = await cocoSsd.load();
+
+        // 3. Setup Webcam Stream
+        elements.aiLoadingProgress.innerText = 'กำลังเปิดกล้องเว็บแคม...';
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, facingMode: 'user' },
+          audio: false
+        });
+
+        elements.webcamVideo.srcObject = stream;
+        await elements.webcamVideo.play();
+
+        // Start processing frames
+        cameraInstance = new Camera(elements.webcamVideo, {
+          onFrame: async () => {
+            if (faceMeshModel) {
+              await faceMeshModel.send({ image: elements.webcamVideo });
+            }
+          },
+          width: 640,
+          height: 480
+        });
+        cameraInstance.start();
+
+        elements.aiLoadingOverlay.classList.add('hidden');
+        console.log("BossGuard AI System Ready!");
+
+      } catch (err) {
+        console.error("AI Initialization Error:", err);
+        elements.aiLoadingProgress.innerHTML = `<span class="text-red-400">เกิดข้อผิดพลาด: ${err.message}</span><br><button onclick="location.reload()" class="mt-2 px-2 py-1 bg-red-700 text-white rounded text-[10px]">ลองใหม่</button>`;
+      }
+    }
+
+    // Callback on each frame results from MediaPipe
+    async function onFaceMeshResults(results) {
+      const canvas = elements.detectionCanvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = elements.webcamVideo.videoWidth || 640;
+      canvas.height = elements.webcamVideo.videoHeight || 480;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      state.detectedFaces = results.multiFaceLandmarks ? results.multiFaceLandmarks.length : 0;
+
+      // 1. Process Face Mesh for primary user (Blink detection)
+      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+        const primaryLandmarks = results.multiFaceLandmarks[0];
+        const ear = calculateEAR(primaryLandmarks);
+        const isClosed = ear < state.earThreshold;
+        handleBlinkChange(isClosed, ear);
+
+        // Draw Eye Landmark Dots on canvas mirror
+        ctx.fillStyle = isClosed ? '#ef4444' : '#10b981';
+        [159, 145, 33, 133, 386, 374, 362, 263].forEach(idx => {
+          const pt = primaryLandmarks[idx];
+          ctx.beginPath();
+          ctx.arc(pt.x * canvas.width, pt.y * canvas.height, 2.5, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      }
+
+      // 2. Run Person Detection (COCO-SSD) every 300ms to save CPU
+      const now = performance.now();
+      if (cocoModel && now - lastCocoDetectTime > 300) {
+        lastCocoDetectTime = now;
+        try {
+          const predictions = await cocoModel.detect(elements.webcamVideo);
+          const persons = predictions.filter(p => p.class === 'person' && p.score > 0.45);
+          state.personCount = persons.length;
+          
+          elements.telemetryPersons.innerText = `${persons.length} คน (${persons.length > 1 ? '🚨 อันตราย!' : 'ปลอดภัย'})`;
+          elements.telemetryPersons.className = persons.length > 1 ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold';
+
+          // Draw Bounding Boxes on Radar Canvas
+          persons.forEach((p, idx) => {
+            const [x, y, w, h] = p.bbox;
+            const isBoss = idx >= 1 || p.score > 0.85 && state.personCount > 1;
+            ctx.strokeStyle = isBoss ? '#ef4444' : '#10b981';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, w, h);
+            ctx.fillStyle = isBoss ? '#ef4444' : '#10b981';
+            ctx.font = '12px monospace';
+            ctx.fillText(isBoss ? `🚨 BOSS ${Math.round(p.score*100)}%` : `USER`, x + 4, y + 16);
+          });
+
+        } catch (e) {
+          // Detection frame drop
+        }
+      }
+
+      // 3. Boss Threat Decision
+      // Threat triggers if:
+      // - More than 1 Person detected (Body walking behind)
+      // - OR More than 1 Face detected (Peeking head)
+      const bossInSight = state.personCount > 1 || state.detectedFaces > 1;
+      setBossAlert(bossInSight);
+    }
+
+    // --------------------------------------------------------
+    // SHORTCUT KEYS & MANUAL OVERRIDES (FOR HACKATHON DEMO)
+    // --------------------------------------------------------
+    window.addEventListener('keydown', (e) => {
+      // Hotkey 'B': Manual Boss Toggle (In case demo needs instant trigger)
+      if (e.key === 'b' || e.key === 'B') {
+        if (!state.isBossDetected) {
+          state.personCount = 2;
+          setBossAlert(true);
+        } else {
+          state.personCount = 1;
+          state.bossCooldownRemaining = 0;
+          setBossAlert(false);
+        }
+        return;
+      }
+
+      // Hotkey 'Escape': Exit Panic Mode
+      if (e.key === 'Escape') {
+        state.personCount = 1;
+        state.bossCooldownRemaining = 0;
+        setBossAlert(false);
+        return;
+      }
+
+      // If in Camouflage mode, ANY key press types realistic code!
+      if (state.isBossDetected) {
+        appendHackerCode();
+      }
+    });
+
+    elements.manualPanicBtn.addEventListener('click', () => {
+      state.personCount = 2;
+      setBossAlert(true);
+    });
+
+    elements.exitPanicManualBtn.addEventListener('click', () => {
+      state.personCount = 1;
+      state.bossCooldownRemaining = 0;
+      setBossAlert(false);
+    });
+
+    // Toggle Camera HUD mirror
+    elements.toggleCameraHudBtn.addEventListener('click', () => {
+      elements.cameraHudWindow.classList.toggle('hidden');
+    });
+    elements.minimizeHudBtn.addEventListener('click', () => {
+      elements.cameraHudWindow.classList.toggle('hidden');
+    });
+
+    // Sliders
+    elements.earSlider.addEventListener('input', (e) => {
+      state.earThreshold = parseFloat(e.target.value);
+      elements.earValDisplay.innerText = state.earThreshold.toFixed(2);
+    });
+
+    elements.cooldownSlider.addEventListener('input', (e) => {
+      state.safetyCooldownSeconds = parseFloat(e.target.value);
+      elements.cooldownDisplay.innerText = state.safetyCooldownSeconds.toFixed(1) + ' วินาที';
+    });
+
+    // Start Everything!
+    window.addEventListener('DOMContentLoaded', () => {
+      initAIModels();
+      // Pre-fill initial code for HackerTyper
+      appendHackerCode();
+    });
+  </script>
+</body>
+</html>
