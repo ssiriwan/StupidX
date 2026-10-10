@@ -1,8 +1,12 @@
-export function createCameraHud() {
+export function createCameraHud(options = {}) {
+  const onStartCamera = options.onStartCamera;
   let root;
   let video;
   let canvas;
   let overlay;
+  let overlayMsg;
+  let overlaySub;
+  let startBtn;
   let telemetryPeople;
   let telemetryEar;
   let telemetryBlink;
@@ -37,8 +41,9 @@ export function createCameraHud() {
           <video autoplay playsinline muted></video>
           <canvas></canvas>
           <div class="hud-overlay">
-            <span>กล้องยังไม่เปิด</span>
-            <small>กดปุ่ม "เปิดกล้อง AI" ด้านบนเพื่อเริ่ม</small>
+            <span class="hud-overlay-msg">กล้องยังไม่เปิด</span>
+            <button type="button" class="hud-start-cam-btn" data-hud-start>📷 กดเปิดกล้องทันที</button>
+            <small class="hud-overlay-sub">คลิกเพื่อเริ่มตรวจจับใบหน้าและคนข้างหลัง</small>
           </div>
         </div>
         <div class="hud-telemetry">
@@ -58,14 +63,24 @@ export function createCameraHud() {
       </div>
     `;
     video = root.querySelector('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+
     canvas = root.querySelector('canvas');
     overlay = root.querySelector('.hud-overlay');
+    overlayMsg = root.querySelector('.hud-overlay-msg');
+    overlaySub = root.querySelector('.hud-overlay-sub');
+    startBtn = root.querySelector('[data-hud-start]');
     telemetryPeople = root.querySelector('[data-hud-people]');
     telemetryEar = root.querySelector('[data-hud-ear]');
     telemetryBlink = root.querySelector('[data-hud-blink]');
 
     root.querySelector('[data-hud-min]').addEventListener('click', toggleMinimize);
     root.querySelector('[data-hud-close]').addEventListener('click', toggleVisibility);
+    startBtn?.addEventListener('click', () => {
+      onStartCamera?.();
+    });
 
     container.append(root);
   }
@@ -78,6 +93,11 @@ export function createCameraHud() {
   function toggleVisibility() {
     isHidden = !isHidden;
     root.hidden = isHidden;
+    return isHidden;
+  }
+
+  function isVisible() {
+    return !isHidden;
   }
 
   function show() {
@@ -86,15 +106,17 @@ export function createCameraHud() {
   }
 
   function attachStream(stream) {
-    if (!video) return;
-    video.srcObject = stream;
-    video.play().catch(() => {});
+    if (!video || !stream) return;
+    if (video.srcObject !== stream) {
+      video.srcObject = stream;
+      video.play().catch(() => {});
+    }
     if (overlay) overlay.hidden = true;
-    if (telemetryPeople) {
+    if (telemetryPeople && telemetryPeople.textContent === 'รอเปิดกล้อง...') {
       telemetryPeople.textContent = 'กำลังเริ่มตรวจจับ...';
       telemetryPeople.style.color = 'var(--accent)';
     }
-    if (telemetryBlink) {
+    if (telemetryBlink && telemetryBlink.textContent === 'รอเปิดกล้อง...') {
       telemetryBlink.textContent = 'ตาเปิด';
       telemetryBlink.style.color = 'var(--accent)';
     }
@@ -102,7 +124,15 @@ export function createCameraHud() {
 
   function detachStream() {
     if (video) video.srcObject = null;
-    if (overlay) overlay.hidden = false;
+    if (overlay) {
+      overlay.hidden = false;
+      if (overlayMsg) overlayMsg.textContent = 'กล้องยังไม่เปิด';
+      if (overlaySub) overlaySub.textContent = 'คลิกเพื่อเริ่มตรวจจับใบหน้าและคนข้างหลัง';
+      if (startBtn) {
+        startBtn.hidden = false;
+        startBtn.textContent = '📷 กดเปิดกล้องทันที';
+      }
+    }
     if (canvas) {
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -114,13 +144,43 @@ export function createCameraHud() {
     lastEar = null;
     lastClosed = false;
     if (telemetryPeople) {
-      telemetryPeople.textContent = 'กล้องปิดอยู่';
+      telemetryPeople.textContent = 'รอเปิดกล้อง...';
       telemetryPeople.style.color = 'var(--muted)';
     }
     if (telemetryEar) telemetryEar.textContent = '—';
     if (telemetryBlink) {
-      telemetryBlink.textContent = 'กล้องปิดอยู่';
+      telemetryBlink.textContent = 'รอเปิดกล้อง...';
       telemetryBlink.style.color = 'var(--muted)';
+    }
+  }
+
+  function updateStatus(status) {
+    if (!overlay) return;
+    if (status?.running) {
+      if (status.camera?.ready) {
+        overlay.hidden = true;
+      } else if (status.camera?.state === 'loading') {
+        overlay.hidden = false;
+        if (overlayMsg) overlayMsg.textContent = '⏳ กำลังขอสิทธิ์และเปิดกล้อง...';
+        if (overlaySub) overlaySub.textContent = 'หากมีกล่องแจ้งเตือน กรุณากด "Allow" เพื่ออนุญาตใช้งานกล้อง';
+        if (startBtn) startBtn.hidden = true;
+      } else if (status.camera?.state === 'error') {
+        overlay.hidden = false;
+        if (overlayMsg) overlayMsg.textContent = '⚠️ ไม่สามารถเปิดกล้องได้';
+        if (overlaySub) overlaySub.textContent = status.error || 'กรุณาอนุญาตสิทธิ์เข้าถึงกล้องในเบราว์เซอร์';
+        if (startBtn) {
+          startBtn.hidden = false;
+          startBtn.textContent = '🔄 ลองเปิดกล้องอีกครั้ง';
+        }
+      }
+    } else {
+      overlay.hidden = false;
+      if (overlayMsg) overlayMsg.textContent = 'กล้องยังไม่เปิด';
+      if (overlaySub) overlaySub.textContent = 'คลิกเพื่อเริ่มตรวจจับใบหน้าและคนข้างหลัง';
+      if (startBtn) {
+        startBtn.hidden = false;
+        startBtn.textContent = '📷 กดเปิดกล้องทันที';
+      }
     }
   }
 
@@ -278,9 +338,11 @@ export function createCameraHud() {
     mount,
     toggleMinimize,
     toggleVisibility,
+    isVisible,
     show,
     attachStream,
     detachStream,
+    updateStatus,
     drawFaceMesh,
     drawPredictions
   };

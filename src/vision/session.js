@@ -78,6 +78,8 @@ export class VisionSession {
 
   publish() { this.callbacks.onStatus(this.getStatus()); }
 
+  getStream() { return this.stream ?? null; }
+
   unavailable(force = false) {
     if (this.personAvailable || force) {
       this.personAvailable = false;

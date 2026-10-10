@@ -27,7 +27,7 @@ const features = {
   music: createMusic({ canInteract: canInteract('music') }),
 };
 let vision;
-const hud = createCameraHud();
+const hud = createCameraHud({ onStartCamera: () => { void vision?.start(); } });
 const launcher = createBrowserLauncher({ canInteract: canInteract() });
 const shell = createShell({
   onTab: (tab) => session.setTab(tab),
@@ -44,7 +44,18 @@ const shell = createShell({
       void vision?.start();
     }
   },
-  onToggleHud: () => hud.toggleVisibility(),
+  onToggleHud: () => {
+    const isHidden = hud.toggleVisibility();
+    if (!isHidden) {
+      const st = vision?.getStatus();
+      if (!st?.running) {
+        void vision?.start();
+      } else {
+        const stream = vision?.getStream?.();
+        if (stream) hud.attachStream(stream);
+      }
+    }
+  },
 });
 const work = createWorkView({ onReturn: () => requestReturn(true) });
 shell.mount(root);
@@ -118,7 +129,15 @@ launcher.mount(shell.refs.launcher);
 vision = createVision({
   onPerson: (observation) => { if (!simulation) session.observePerson(observation); },
   onBlink: (observation) => { if (!simulation) session.observeBlink(observation); },
-  onStatus: (status) => { visionStatus = status.text ?? 'กล้อง: ข้อมูลไม่พร้อม'; session.emit(); },
+  onStatus: (status) => {
+    visionStatus = status.text ?? 'กล้อง: ข้อมูลไม่พร้อม';
+    hud.updateStatus(status);
+    const stream = vision?.getStream?.();
+    if (stream && status.camera?.ready) {
+      hud.attachStream(stream);
+    }
+    session.emit();
+  },
   onStreamReady: (stream) => hud.attachStream(stream),
   onFaceMeshResults: (results, ear, closed) => hud.drawFaceMesh(results, ear, closed),
   onPersonResults: (predictions, count) => hud.drawPredictions(predictions, count),

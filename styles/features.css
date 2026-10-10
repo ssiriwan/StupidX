@@ -588,12 +588,31 @@
   color: var(--muted);
   font-size: 12px;
   text-align: center;
-  padding: 12px;
+  padding: 16px;
+  gap: 8px;
+}
+
+.hud-start-cam-btn {
+  margin: 6px 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s, filter 0.1s;
+}
+.hud-start-cam-btn:hover {
+  filter: brightness(1.15);
+  transform: scale(1.03);
 }
 
 .hud-overlay small {
-  margin-top: 4px;
-  font-size: 10px;
+  margin-top: 2px;
+  font-size: 11px;
   color: var(--text);
 }
 

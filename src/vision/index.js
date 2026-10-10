@@ -108,5 +108,8 @@ export function createVision(options = {}, dependencies = {}) {
       ear: null,
     };
   }
-  return { mount, start, stop, reset, dispose, getStatus };
+  function getStream() {
+    return session?.getStream() ?? null;
+  }
+  return { mount, start, stop, reset, dispose, getStatus, getStream };
 }
