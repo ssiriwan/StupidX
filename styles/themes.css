@@ -1,0 +1,123 @@
+/* Feature contract: these generic tokens are available in every theme.
+   --surface, --surface-alt, --text, --muted, --border, --accent,
+   --accent-text, --radius, --shadow. Additional chrome/sheet tokens are UI-only. */
+:root,
+:root[data-theme="win11"] {
+  color-scheme: light;
+  --desktop: #eaf0f6;
+  --surface: #ffffff;
+  --surface-alt: #f3f6fa;
+  --text: #142339;
+  --muted: #607189;
+  --border: #d5dfeb;
+  --accent: #096bf2;
+  --accent-text: #ffffff;
+  --radius: 12px;
+  --shadow: 0 10px 30px #263b5510, 0 1px 3px #263b550c;
+  --chrome: #f3f7fccc;
+  --chrome-text: #142339;
+  --tab-idle: #e8eef5;
+  --tab-selected: #096bf2;
+  --tab-text: #ffffff;
+  --brand-fill: #d0e7f5;
+  --button-shadow: 0 1px 2px #1423390d;
+  --panic: #f73539;
+  --sheet-accent: #268151;
+  --sheet-grid: #dce4e9;
+  --sheet-header: #dcefe4;
+  --sheet-chrome: #f0f4f7;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+:root[data-theme="win95"] {
+  --desktop: #f4f1e6;
+  --surface: #ffffff;
+  --surface-alt: #dfdfdf;
+  --text: #111111;
+  --muted: #505050;
+  --border: #858585;
+  --accent: #000080;
+  --accent-text: #ffffff;
+  --radius: 0px;
+  --shadow: 2px 2px 0 #000000;
+  --chrome: #c0c0c0;
+  --chrome-text: #111111;
+  --tab-idle: #c0c0c0;
+  --tab-selected: #000080;
+  --tab-text: #ffffff;
+  --brand-fill: #ffff62;
+  --button-shadow: inset 2px 2px #ffffff, inset -2px -2px #454545;
+  --panic: #f22626;
+  --sheet-accent: #267847;
+  --sheet-grid: #d2d2d2;
+  --sheet-header: #d4ead7;
+  --sheet-chrome: #c0c0c0;
+  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+}
+:root[data-theme="xp"] {
+  --desktop: #b5d7ff;
+  --surface: #fffef9;
+  --surface-alt: #e8f1fb;
+  --text: #0c2758;
+  --muted: #64758c;
+  --border: #a5bedc;
+  --accent: #076af1;
+  --accent-text: #ffffff;
+  --radius: 7px;
+  --shadow: 0 3px 12px #073c8f2b;
+  --chrome: #fffbed;
+  --chrome-text: #0c2758;
+  --tab-idle: linear-gradient(#d4e7fc, #aecfed);
+  --tab-selected: #fffbed;
+  --tab-text: #0c2758;
+  --brand-fill: #c8edff;
+  --button-shadow: inset 0 1px 2px #ffffff, 0 1px 2px #15458620;
+  --panic: #ef263b;
+  --sheet-accent: #298752;
+  --sheet-grid: #cddce8;
+  --sheet-header: #d9eddd;
+  --sheet-chrome: #f6f4e9;
+  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+}
+[data-theme="win95"] body {
+  background-image: linear-gradient(#d7d3c53b 1px, transparent 1px), linear-gradient(90deg, #d7d3c53b 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+[data-theme="win95"] .app-window,
+[data-theme="win95"] .settings-drawer,
+[data-theme="win95"] .app-footer,
+[data-theme="win95"] .document-ribbon {
+  border: 2px solid #333;
+  box-shadow: inset 2px 2px #fff, inset -2px -2px #858585, 2px 2px #111;
+}
+[data-theme="win95"] .button,
+[data-theme="win95"] .app-tab,
+[data-theme="win95"] .theme-button,
+[data-theme="win95"] .panic-button {
+  border: 1px solid #333;
+  box-shadow: var(--button-shadow);
+}
+[data-theme="win95"] .button:active,
+[data-theme="win95"] .theme-button:active { box-shadow: inset 2px 2px #454545, inset -2px -2px white; }
+[data-theme="win95"] .app-tab[aria-selected="true"] { box-shadow: inset 2px 2px #7488ff, inset -2px -2px #030340; }
+[data-theme="win95"] .address-field { box-shadow: inset 1px 1px #505050; border: 2px solid #fff; outline: 1px solid #858585; }
+[data-theme="win95"] .brand h1 { letter-spacing: -1.2px; }
+[data-theme="xp"] .leisure-shell { border: 3px solid #0869ea; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px #0746b3, 0 6px 20px #154b8633; }
+[data-theme="xp"] .app-header { background: linear-gradient(#1786ff 0%, #0863ed 15%, #0861ed 85%, #0848b9 100%); color: white; padding: 18px 20px; }
+[data-theme="xp"] .brand-subtitle { color: #dae8ff; }
+[data-theme="xp"] .watch-status { color: #fff; background: #005ad0; border-color: #3987f3; }
+[data-theme="xp"] .theme-picker { background: #d1e4f7; color: #10285b; border-color: #6ca2e7; }
+[data-theme="xp"] .theme-button[aria-pressed="true"] { background: linear-gradient(#3cce4d, #09a222); border-color: #079317; color: #fff; box-shadow: inset 0 2px #98f598; }
+[data-theme="xp"] .tab-strip { background: linear-gradient(#5ba9ff, #69b5ff); padding: 9px 15px 0; gap: 3px; }
+[data-theme="xp"] .app-tab[aria-selected="true"] { border-top: 3px solid #ecbd52; }
+[data-theme="xp"] .app-window { border-radius: 0; border: 0; box-shadow: none; }
+[data-theme="xp"] .app-footer { margin: 0; border-radius: 0; background: #e4f0fb; }
+[data-theme="xp"] .button-primary { background: linear-gradient(#338dff, #0060e8); box-shadow: inset 0 1px #84c0ff, 0 1px 3px #0d45803b; }
+[data-theme="xp"] .work-view { border: 3px solid #076af1; border-radius: 8px 8px 0 0; }
+[data-theme="xp"] .document-header { background: linear-gradient(#2389ff, #0555dd); color: white; }
+[data-theme="xp"] .save-status,
+[data-theme="xp"] .document-period { color: #edf5ff; }
+[data-theme="xp"] .document-close { color: white; background: linear-gradient(#ee8b7b, #d63f27); border: 1px solid white; }
+[data-theme="win95"] .document-header { background: #000080; color: white; padding-block: 7px; }
+[data-theme="win95"] .save-status,
+[data-theme="win95"] .document-period { color: #e1e1e1; }
+[data-theme="win95"] .document-close { background: #c0c0c0; color: black; box-shadow: var(--button-shadow); border: 1px solid black; }
