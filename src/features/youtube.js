@@ -150,12 +150,13 @@ const defaultVideos = [
   }
 ];
 
-export function createYouTube({ canInteract = () => true } = {}) {
-  const guard = new PlaybackGuard({ canInteract });
+export function createYouTube({ canInteract = () => true, guard: customGuard = null } = {}) {
+  const guard = customGuard ?? new PlaybackGuard({ canInteract });
   let root, abort, player, ready = false, disposed = false, connecting = false, generation = 0;
   let videoId = 'dQw4w9WgXcQ';
   let currentVideo = defaultVideos[0];
   let isBlinkLocked = false;
+  let userPaused = false;
   let currentView = 'browse'; // 'browse' or 'watch'
 
   const status = (text) => {
@@ -209,7 +210,10 @@ export function createYouTube({ canInteract = () => true } = {}) {
             status('พร้อมแล้ว · เลือกคลิปเพื่อเริ่มดู');
           },
           onStateChange(event) {
-            if (event.data === 1) guard.onPlaying();
+            if (event.data === 1) {
+              userPaused = false;
+              guard.onPlaying();
+            }
           },
           onError(event) {
             status(`คลิปนี้มีปัญหาจากเจ้าของลิขสิทธิ์ (${event.data}) · ลองเลือกคลิปอื่น`);
@@ -225,6 +229,12 @@ export function createYouTube({ canInteract = () => true } = {}) {
 
   function playVideoItem(item) {
     if (!canInteract()) return;
+    userPaused = false;
+    isBlinkLocked = false;
+    if (root) {
+      const overlay = root.querySelector('[data-yt-blink-overlay]');
+      if (overlay) overlay.hidden = true;
+    }
     currentVideo = item;
     videoId = item.id;
     guard.resume();
@@ -357,6 +367,7 @@ export function createYouTube({ canInteract = () => true } = {}) {
   }
 
   function showAttentionLock({ type = 'look-away', reason = '' } = {}) {
+    if (userPaused) return;
     isBlinkLocked = true;
     guard.pause();
     if (root) {
@@ -385,7 +396,7 @@ export function createYouTube({ canInteract = () => true } = {}) {
         if (desc) desc.innerHTML = `ระบบ <strong>Anti-FOMO</strong> ตรวจพบว่า (${reasonText}) จึงหยุดวิดีโอไว้ เพื่อไม่ให้คุณพลาดเนื้อหาสำคัญ`;
       }
     }
-    status('👀 ตรวจพบว่าไม่ได้มองหน้าจอ! วิดีโอถูกล็อคไว้ กรุณากดเล่นต่อเองเมื่อพร้อม');
+    status('👀 ตรวจพบว่าไม่ได้มองหน้าจอ! วิดีโอถูกล็อคไว้ (จะเล่นต่ออัตโนมัติเมื่อมองจอ)');
   }
 
   function showBlinkLock() {
@@ -394,6 +405,7 @@ export function createYouTube({ canInteract = () => true } = {}) {
 
   function dismissBlinkLock() {
     isBlinkLocked = false;
+    userPaused = false;
     if (root) {
       const overlay = root.querySelector('[data-yt-blink-overlay]');
       if (overlay) overlay.hidden = true;
@@ -401,6 +413,12 @@ export function createYouTube({ canInteract = () => true } = {}) {
     guard.resume();
     guard.play();
     status('กำลังเล่นต่อ · ตั้งใจดูหน้าจอไว้นะครับ!');
+  }
+
+  function attentionResume() {
+    if (!canInteract() || !isBlinkLocked || userPaused) return false;
+    dismissBlinkLock();
+    return true;
   }
 
   return {
@@ -538,11 +556,18 @@ export function createYouTube({ canInteract = () => true } = {}) {
 
       // Play / Pause / Mute buttons
       root.querySelector('[data-yt-play]').addEventListener('click', () => {
+        userPaused = false;
         if (guard.play()) status('กำลังเล่น · อย่าพลาดแม้แต่เสี้ยววินาที');
       }, options);
 
       root.querySelector('[data-yt-pause]').addEventListener('click', () => {
         if (canInteract()) {
+          userPaused = true;
+          isBlinkLocked = false;
+          if (root) {
+            const overlay = root.querySelector('[data-yt-blink-overlay]');
+            if (overlay) overlay.hidden = true;
+          }
           guard.pause();
           status('หยุดไว้แล้ว');
         }
@@ -577,6 +602,29 @@ export function createYouTube({ canInteract = () => true } = {}) {
       showAttentionLock(details || { type: 'look-away' });
     },
 
+    attentionResume() {
+      return attentionResume();
+    },
+
+    dismissBlinkLock() {
+      dismissBlinkLock();
+    },
+
+    play() {
+      userPaused = false;
+      return guard.play();
+    },
+
+    pause() {
+      userPaused = true;
+      isBlinkLocked = false;
+      if (root) {
+        const overlay = root.querySelector('[data-yt-blink-overlay]');
+        if (overlay) overlay.hidden = true;
+      }
+      guard.pause();
+    },
+
     suspend(reason) {
       guard.suspend();
       if (ready && reason !== 'initial') status('หยุดไว้แล้ว · กลับมาแล้วกด Play เอง');
@@ -589,6 +637,7 @@ export function createYouTube({ canInteract = () => true } = {}) {
     reset() {
       guard.pause();
       isBlinkLocked = false;
+      userPaused = false;
       videoId = 'dQw4w9WgXcQ';
       currentVideo = defaultVideos[0];
       switchView('browse');
@@ -609,7 +658,14 @@ export function createYouTube({ canInteract = () => true } = {}) {
     },
 
     getState() {
-      return { ready, videoId, muted: guard.muted, suspended: guard.suspended };
+      return {
+        ready,
+        videoId,
+        muted: guard.muted,
+        suspended: guard.suspended,
+        isBlinkLocked,
+        userPaused,
+      };
     },
   };
 }

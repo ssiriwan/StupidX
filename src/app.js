@@ -1,5 +1,6 @@
 import { createShell } from './ui/shell.js';
 import { createWorkView } from './ui/work.js';
+import { createBsod } from './ui/bsod.js';
 import { SessionController, LEISURE, ignoresShortcut } from './core/session.js';
 import { createYouTube } from './features/youtube.js';
 import { createAI } from './features/ai.js';
@@ -29,6 +30,9 @@ const features = {
 let vision;
 const hud = createCameraHud({ onStartCamera: () => { void vision?.start(); } });
 const launcher = createBrowserLauncher({ canInteract: canInteract() });
+const bsod = createBsod({
+  onDismiss: () => session.dismissBsod(),
+});
 const shell = createShell({
   onTab: (tab) => session.setTab(tab),
   onTheme: (theme) => session.setTheme(theme),
@@ -57,10 +61,16 @@ const shell = createShell({
     }
   },
 });
-const work = createWorkView({ onReturn: () => requestReturn(true) });
+const work = createWorkView({
+  onReturn: () => requestReturn(true),
+  onPanic: () => {
+    if (session.mode !== LEISURE) session.triggerBsod();
+  },
+});
 shell.mount(root);
 work.mount(root);
 hud.mount(document.body);
+bsod.mount(document.body);
 
 function render(state) {
   let status;
@@ -85,6 +95,11 @@ function render(state) {
   const cameraRunning = vision?.getStatus()?.running ?? false;
   shell.update({ ...state, status, cameraRunning });
   work.update({ canReturn: state.canReturn, unknown: state.unknown });
+  if (state.bsod) {
+    bsod.show(state.theme);
+  } else {
+    bsod.hide();
+  }
   if (state.present && returnDialog.open) returnDialog.close();
   const label = shell.refs.settings.querySelector('[data-simulation-label]');
   if (label) label.textContent = simulation ? 'กำลังจำลอง · ไม่ใช่ผลจากกล้องจริง' : 'ปิดการจำลอง · ใช้ข้อมูลจากกล้องเมื่อพร้อม';
@@ -92,6 +107,7 @@ function render(state) {
 
 function switchSurface(mode) {
   if (mode === LEISURE) {
+    bsod.hide();
     work.hide();
     shell.refs.leisure.hidden = false;
     shell.refs.leisure.inert = false;
@@ -135,8 +151,12 @@ vision = createVision({
     }
   },
   onAttention: (observation) => {
-    if (!simulation && !observation.lookingAtScreen) {
-      features.youtube.attentionPause({ type: 'look-away', reason: observation.reason });
+    if (!simulation) {
+      if (observation.lookingAtScreen === false) {
+        features.youtube.attentionPause({ type: 'look-away', reason: observation.reason });
+      } else if (observation.lookingAtScreen === true) {
+        features.youtube.attentionResume();
+      }
     }
   },
   onStatus: (status) => {
@@ -200,9 +220,37 @@ document.querySelector('#return-confirm').addEventListener('click', () => {
   if (session.requestReturn({ acknowledgeUnknown: true })) returnDialog.close();
 }, options);
 window.addEventListener('keydown', (event) => {
+  if (session.bsod || bsod.isVisible()) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      session.dismissBsod();
+    }
+    return;
+  }
+
   if (ignoresShortcut(event)) return;
-  if (event.key.toLowerCase() === 'b') { event.preventDefault(); if (returnDialog.open) returnDialog.close(); session.enterWork('manual'); }
-  else if (event.key === 'Escape' && session.mode !== LEISURE && !returnDialog.open) { event.preventDefault(); requestReturn(false); }
+
+  const key = event.key;
+  const isB = key.toLowerCase() === 'b';
+  const isF8 = key === 'F8';
+
+  if (session.mode === LEISURE) {
+    if (isB) {
+      event.preventDefault();
+      if (returnDialog.open) returnDialog.close();
+      session.enterWork('manual');
+    }
+  } else {
+    // Already in Work mode
+    if (isB || isF8) {
+      event.preventDefault();
+      if (returnDialog.open) returnDialog.close();
+      session.triggerBsod();
+    } else if (key === 'Escape' && !returnDialog.open) {
+      event.preventDefault();
+      requestReturn(false);
+    }
+  }
 }, options);
 
 function reset() {
@@ -222,7 +270,7 @@ function dispose() {
   disposed = true;
   abort.abort(); clearInterval(pulse); clearTimeout(simLeaveTimer);
   for (const feature of Object.values(features)) feature.dispose();
-  launcher.dispose(); vision.dispose(); shell.dispose(); work.dispose();
+  launcher.dispose(); vision.dispose(); shell.dispose(); work.dispose(); bsod.dispose();
 }
 window.addEventListener('pagehide', (event) => { if (!event.persisted) dispose(); else { for (const feature of Object.values(features)) feature.suspend('pagehide'); launcher.suspend(); vision.stop(); } }, options);
 window.addEventListener('pageshow', (event) => { if (event.persisted && session.mode === LEISURE) { features[session.activeTab].resume(); launcher.resume(); } }, options);

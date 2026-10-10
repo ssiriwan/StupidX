@@ -38,11 +38,228 @@ svg { display: block; }
 .watch-status { display: flex; align-items: center; gap: 9px; border: 1px solid #d4e4d8; border-radius: var(--radius); background: #e7f4e9; padding: 9px 13px; color: #295a38; font-size: 13px; max-width: 340px; }
 .status-dot { width: 9px; height: 9px; background: #78957f; border-radius: 50%; flex-shrink: 0; }
 .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-.theme-picker { display: flex; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-alt); }
-.theme-button { display: flex; align-items: center; gap: 7px; background: transparent; color: var(--text); border: 1px solid transparent; border-radius: max(0px, calc(var(--radius) - 3px)); padding: 9px 11px; font-size: 12px; white-space: nowrap; }
-.theme-button .icon { width: 17px; height: 17px; opacity: .6; }
-.theme-button[aria-pressed="true"] { color: var(--accent); background: var(--surface); border-color: var(--border); box-shadow: var(--button-shadow); font-weight: 650; }
-.theme-button[aria-pressed="true"] .icon { opacity: 1; }
+.theme-picker {
+  position: relative;
+  display: inline-flex;
+}
+.theme-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--button-shadow);
+  user-select: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.theme-dropdown-toggle:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+.theme-dropdown-toggle[aria-expanded="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.theme-chevron {
+  width: 14px;
+  height: 14px;
+  opacity: .7;
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+}
+.theme-dropdown-toggle[aria-expanded="true"] .theme-chevron {
+  transform: rotate(180deg);
+}
+.theme-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px #00000025;
+}
+.theme-swatch-win11 { background: linear-gradient(135deg, #096bf2, #60a5fa); }
+.theme-swatch-dark { background: linear-gradient(135deg, #0f172a, #334155); border: 1px solid #64748b; }
+.theme-swatch-win95 { background: #c0c0c0; border: 1px solid #454545; }
+.theme-swatch-xp { background: linear-gradient(135deg, #1786ff, #3cce4d); }
+.theme-swatch-gov { background: linear-gradient(135deg, #133b70, #ffd700); }
+.theme-swatch-hi5 { background: linear-gradient(135deg, #ff1493, #ff77c6); }
+.theme-swatch-matrix { background: #020702; border: 1px solid #00ff66; box-shadow: 0 0 4px #00ff66; }
+.theme-swatch-icu { background: #05080c; border: 1px solid #00e676; box-shadow: 0 0 4px #00e676; }
+
+.theme-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  max-width: min(280px, 92vw);
+  max-height: min(390px, 70vh);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 12px 28px #00000030;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 1000;
+  overscroll-behavior: contain;
+}
+.theme-dropdown-menu[hidden] { display: none; }
+.theme-button.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: max(0px, calc(var(--radius) - 3px));
+  padding: 8px 10px;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.12s ease;
+}
+.theme-button.theme-option:hover,
+.theme-button.theme-option:focus-visible {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+.theme-button.theme-option[aria-pressed="true"] {
+  background: var(--surface-alt);
+  color: var(--accent);
+  font-weight: 700;
+  border-color: var(--border);
+}
+.theme-option-label { flex: 1; }
+.theme-option-check {
+  width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  opacity: 0;
+}
+.theme-button.theme-option[aria-pressed="true"] .theme-option-check {
+  opacity: 1;
+}
+
+/* Theme-specific dropdown overrides */
+[data-theme="win95"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-theme="win95"] .theme-dropdown-toggle {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  border-radius: 0;
+  box-shadow: inset 1px 1px #ffffff, inset -1px -1px #808080;
+  color: #000000;
+  font-family: inherit;
+}
+[data-theme="win95"] .theme-dropdown-toggle:active {
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow: inset 1px 1px #000000;
+}
+[data-theme="win95"] .theme-dropdown-menu {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+[data-theme="xp"] .theme-picker { padding: 0; border: none; background: transparent; box-shadow: none; }
+[data-theme="xp"] .theme-dropdown-toggle {
+  background: linear-gradient(to bottom, #ffffff, #ece9d8);
+  border-color: #7f9db9;
+  border-radius: 4px;
+  color: #0c2758;
+}
+[data-theme="xp"] .theme-dropdown-menu {
+  background: #ffffff;
+  border: 2px solid #0869ea;
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(7, 60, 143, 0.25);
+}
+
+[data-theme="dark"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-theme="dark"] .theme-dropdown-toggle {
+  background: #18181b;
+  border-color: #3f3f46;
+  color: #f4f4f5;
+}
+[data-theme="dark"] .theme-dropdown-menu {
+  background: #18181b;
+  border-color: #3f3f46;
+}
+
+[data-theme="gov"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-theme="gov"] .theme-dropdown-toggle {
+  background: #fdfbf7;
+  border-color: #c59b27;
+  color: #0b2545;
+  border-radius: 0;
+}
+[data-theme="gov"] .theme-dropdown-menu {
+  background: #fdfbf7;
+  border: 2px solid #c59b27;
+  border-radius: 0;
+}
+
+[data-theme="hi5"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-theme="hi5"] .theme-dropdown-toggle {
+  background: #1d0326;
+  border-color: #ff1493;
+  color: #ffebf7;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 20, 147, 0.4);
+}
+[data-theme="hi5"] .theme-dropdown-menu {
+  background: #1d0326;
+  border: 2px solid #ff1493;
+  border-radius: 14px;
+  box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
+}
+
+[data-theme="matrix"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-theme="matrix"] .theme-dropdown-toggle {
+  background: #050d08;
+  border-color: #00ff66;
+  color: #00ff66;
+  border-radius: 0;
+  box-shadow: 0 0 8px rgba(0, 255, 102, 0.25);
+}
+[data-theme="matrix"] .theme-dropdown-menu {
+  background: #050d08;
+  border: 1px solid #00ff66;
+  border-radius: 0;
+  box-shadow: 0 0 20px rgba(0, 255, 102, 0.35);
+}
+
+[data-theme="icu"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-theme="icu"] .theme-dropdown-toggle {
+  background: #08121a;
+  border-color: #00e67666;
+  color: #00e5ff;
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+}
+[data-theme="icu"] .theme-dropdown-menu {
+  background: #08121a;
+  border: 1px solid #00e676;
+  border-radius: 3px;
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.25);
+}
 .panic-button { display: flex; gap: 8px; align-items: center; background: var(--panic); color: #fff; font-weight: 700; border: 1px solid #df2529; border-radius: var(--radius); padding: 12px 17px; min-height: 47px; box-shadow: 0 3px 7px #ef323224; white-space: nowrap; }
 .panic-button:hover { background: #e92025; }
 .panic-button kbd { font-family: inherit; font-size: 10px; border: 1px solid #ffffff7a; border-radius: 3px; padding: 1px 4px; opacity: .85; }
@@ -218,20 +435,242 @@ svg { display: block; }
 .selected-sheet { border-bottom: 3px solid var(--sheet-accent); font-weight: 700; color: var(--sheet-accent); background: var(--surface); }
 .document-footer { display: flex; gap: 25px; padding: 7px 18px; min-height: 33px; background: var(--sheet-chrome); border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); flex: 0 0 auto; }
 .document-zoom { margin-left: auto; white-space: nowrap; }
+
+/* Emergency BSOD panic button in Work view */
+.emergency-panic-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panic, #ef3232);
+  color: #fff;
+  border: 1px solid #df2529;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.emergency-panic-btn:hover {
+  background: #d81f24;
+}
+.emergency-panic-btn:active {
+  transform: scale(0.97);
+}
+
+/* BSOD (Blue Screen of Death) */
+.bsod-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  cursor: default;
+}
+
+.bsod-screen[hidden] {
+  display: none !important;
+}
+
+/* Windows 11 / Modern BSOD */
+.bsod-container.bsod-win11 {
+  width: 100%;
+  height: 100%;
+  background: #0078d7;
+  color: #ffffff;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vw 12vw;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.bsod-win11 .bsod-sad {
+  font-size: clamp(60px, 9vw, 110px);
+  font-weight: 300;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+
+.bsod-win11 .bsod-heading {
+  font-size: clamp(20px, 2.5vw, 32px);
+  font-weight: 300;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.bsod-win11 .bsod-th-sub {
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
+.bsod-win11 .bsod-desc {
+  font-size: clamp(14px, 1.5vw, 18px);
+  font-weight: 300;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  opacity: 0.95;
+}
+
+.bsod-win11 .bsod-th-desc {
+  font-size: 0.9em;
+  opacity: 0.85;
+}
+
+.bsod-win11 .bsod-progress {
+  font-size: clamp(16px, 1.8vw, 22px);
+  font-weight: 300;
+  margin-bottom: 36px;
+}
+
+.bsod-win11 .bsod-details {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.bsod-win11 .bsod-qr {
+  width: 96px;
+  height: 96px;
+  background: #fff;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.bsod-win11 .bsod-meta {
+  font-size: clamp(11px, 1.2vw, 14px);
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.bsod-win11 .bsod-code {
+  margin-top: 6px;
+}
+
+.bsod-action-bar {
+  margin-top: 32px;
+}
+
+.bsod-dismiss-btn {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bsod-dismiss-btn:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Windows 95 BSOD */
+.bsod-container.bsod-win95 {
+  width: 100%;
+  height: 100%;
+  background: #0000aa;
+  color: #ffffff;
+  font-family: "Courier New", Courier, monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.bsod-win95-content {
+  max-width: 760px;
+  font-size: clamp(14px, 1.8vw, 18px);
+  line-height: 1.6;
+}
+
+.bsod-win95-title {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.bsod-win95-title span {
+  background: #a8a8a8;
+  color: #0000aa;
+  padding: 2px 14px;
+  font-weight: bold;
+}
+
+.bsod-win95-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 20px 0;
+}
+
+.bsod-win95-list li {
+  margin-bottom: 12px;
+}
+
+.bsod-win95-prompt {
+  text-align: center;
+  margin-top: 32px;
+}
+
+/* Windows XP BSOD */
+.bsod-container.bsod-xp {
+  width: 100%;
+  height: 100%;
+  background: #000082;
+  color: #ffffff;
+  font-family: "Lucida Console", "Courier New", monospace;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 60px;
+  box-sizing: border-box;
+  font-size: clamp(12px, 1.5vw, 16px);
+  line-height: 1.6;
+  overflow: auto;
+}
+
+.bsod-xp-content {
+  max-width: 900px;
+}
+
+.bsod-xp-code {
+  font-weight: bold;
+  margin: 16px 0;
+}
+
+.bsod-xp-dump {
+  margin: 4px 0;
+}
+
+.bsod-xp-prompt {
+  margin-top: 24px;
+}
+
 @media (min-width: 1600px) { .feature-panel { min-height: 600px; } }
 @media (max-width: 1250px) {
   .app-header { gap: 14px; }
   .brand h1 { font-size: 29px; }
   .watch-status { max-width: 260px; }
-  .theme-button { padding: 8px; }
-  .theme-button .icon { display: none; }
+  .theme-dropdown-toggle { padding: 7px 10px; font-size: 12px; }
   .panic-button { padding: 11px; }
   .panic-button kbd { display: none; }
   .header-actions { gap: 8px; }
 }
 @media (max-width: 1020px) {
   .header-actions { width: 100%; justify-content: space-between; }
-  .theme-button .icon { display: block; }
   .watch-status { margin-left: auto; max-width: 46%; }
   .settings-grid { grid-template-columns: 1fr 1fr; }
   .settings-mount { grid-column: 1 / -1; }
@@ -249,8 +688,8 @@ svg { display: block; }
   .watch-status { padding: 6px 9px; font-size: 11px; max-width: 100%; width: 100%; margin: 0; }
   .header-actions { gap: 7px; flex-wrap: wrap; }
   .theme-picker { flex: 1; }
-  .theme-button { padding: 7px 5px; justify-content: center; font-size: 10px; flex: 1; gap: 4px; }
-  .theme-button .icon { width: 13px; height: 13px; }
+  .theme-dropdown-toggle { width: 100%; justify-content: space-between; font-size: 12px; padding: 7px 10px; min-height: 38px; }
+  .theme-dropdown-menu { right: 0; min-width: 190px; }
   .panic-button { font-size: 12px; padding: 10px; min-height: 42px; }
   .panic-button .icon { width: 18px; height: 18px; }
   .app-tab { font-size: 14px; min-height: 54px; padding: 12px 4px; gap: 7px; }
@@ -292,6 +731,7 @@ svg { display: block; }
   .yt-presets > span:last-child { margin: 6px 0 0; width: 100%; }
   .document-header { padding: 10px; gap: 10px; min-height: 54px; }
   .document-header h1 { font-size: 12px; }
+  .emergency-panic-btn { font-size: 10px; padding: 3px 6px; }
   .save-status { font-size: 10px; gap: 3px; }
   .save-status .icon { width: 13px; height: 13px; }
   .document-icon { width: 21px; height: 25px; font-size: 16px; }
@@ -312,6 +752,8 @@ svg { display: block; }
 }
 @media (max-width: 380px) {
   .header-actions { display: grid; grid-template-columns: 1fr; }
+  .theme-picker { width: 100%; }
+  .theme-dropdown-menu { left: 0; right: 0; min-width: 100%; }
   .panic-button { justify-content: center; }
   .save-status { display: none; }
 }

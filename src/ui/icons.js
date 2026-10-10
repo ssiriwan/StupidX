@@ -9,8 +9,11 @@ const paths = {
   check: '<path d="m5 12 4 4L19 6"/>',
   reset: '<path d="M3 10a9 9 0 1 1 1 8M3 3v7h7"/>',
   arrow: '<path d="m14 5-7 7 7 7"/>',
+  chevronDown: '<path d="m6 9 6 6 6-6"/>',
+  palette: '<circle cx="13.5" cy="6.5" r=".75" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".75" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".75" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".75" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.5-.58 1.5-1.5 0-.42-.16-.8-.43-1.09-.27-.29-.44-.67-.44-1.09 0-.92.58-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.5-4.5-10-10-10z"/>',
   windows: '<path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" fill="currentColor" stroke="none"/>',
   camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  pulse: '<path d="M3 12h4l2.5-7 4 14 3-7h4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
 };
 
 export function icon(name, className = '') {

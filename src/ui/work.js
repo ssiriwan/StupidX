@@ -1,78 +1,235 @@
 import { icon } from './icons.js';
-import { workProjects, workAverage, workTotal } from '../data/work-data.js';
+import { PERSONAS } from './personas.js';
 
-function progressChart() {
-  const grid = [0, 20, 40, 60, 80, 100].map(value => {
-    const y = 232 - value * 1.7;
-    return `<line x1="50" x2="550" y1="${y}" y2="${y}" stroke="var(--sheet-grid)"/><text x="39" y="${y + 4}" text-anchor="end">${value}%</text>`;
-  }).join('');
-  const bars = workProjects.map((project, index) => {
-    const x = 75 + index * 123;
-    const height = project.progress * 1.7;
-    return `<rect x="${x}" y="${232 - height}" width="65" height="${height}" fill="var(--sheet-accent)" rx="1"/><text class="chart-value" x="${x + 32.5}" y="${222 - height}" text-anchor="middle">${project.progress}%</text><text x="${x + 32.5}" y="255" text-anchor="middle">${project.name}</text>`;
-  }).join('');
-  return `<svg viewBox="0 0 590 280" role="img" aria-labelledby="work-chart-title work-chart-desc"><title id="work-chart-title">ความคืบหน้าโครงการ</title><desc id="work-chart-desc">${workProjects.map(project => `${project.name} ${project.progress}%`).join(', ')}</desc>${grid}${bars}</svg>`;
-}
-
-/** The work surface contains only document content, with no leisure affordances. */
-export function createWorkView({ onReturn } = {}) {
+/**
+ * Creates the Work View surface with 4 selectable Work Personas:
+ * - Accountant (Default): Excel Q4 Financial Spreadsheet
+ * - Developer: VS Code Dark Theme interface
+ * - Designer: Figma / Photoshop UI
+ * - PM: Jira / Trello Kanban Board
+ */
+export function createWorkView({ onReturn, onPanic } = {}) {
   let element;
-  let close;
+  let stageElement;
   let mounted = false;
   let returnAllowed = false;
-  const closeDocument = () => { if (returnAllowed) onReturn?.(); };
+
+  let currentPersona = 'accountant';
+  try {
+    const saved = localStorage.getItem('stupidx_work_persona');
+    if (saved && PERSONAS[saved]) currentPersona = saved;
+  } catch {}
+
+  const developerState = {
+    selectedFile: 'main.rs',
+  };
+
+  const closeDocument = () => {
+    if (returnAllowed) onReturn?.();
+  };
+
+  function updateCloseButtons() {
+    if (!element) return;
+    const buttons = element.querySelectorAll('.document-close');
+    for (const btn of buttons) {
+      btn.disabled = !returnAllowed;
+      btn.title = returnAllowed ? 'ปิดเอกสาร' : 'กำลังประมวลผลเอกสาร';
+    }
+  }
+
+  function renderCurrentPersona() {
+    if (!stageElement) return;
+    const persona = PERSONAS[currentPersona] || PERSONAS.accountant;
+    stageElement.innerHTML = persona.render(developerState);
+    updateCloseButtons();
+  }
+
+  function setPersona(personaId) {
+    if (!PERSONAS[personaId]) return;
+    currentPersona = personaId;
+    try {
+      localStorage.setItem('stupidx_work_persona', personaId);
+    } catch {}
+
+    // Update active tab buttons in switcher bar
+    const tabBtns = element.querySelectorAll('.persona-tab-btn');
+    for (const btn of tabBtns) {
+      const isActive = btn.dataset.persona === currentPersona;
+      btn.classList?.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+    }
+
+    renderCurrentPersona();
+
+    if (!element.hidden) {
+      document.title = PERSONAS[currentPersona]?.windowTitle || 'รายงานผลการดำเนินงาน Q4';
+    }
+  }
+
   function mount(root) {
     if (mounted) return;
     mounted = true;
+
     element = document.createElement('section');
     element.className = 'work-view';
     element.tabIndex = -1;
     element.hidden = true;
-    element.setAttribute('aria-label', 'รายงานผลการดำเนินงาน Q4');
-    const columns = 'ABCDEFGHIJKLMNOP'.split('');
-    const rows = Array.from({ length: 20 }, (_, index) => {
-      const number = index + 1;
-      const project = workProjects[index - 1];
-      const values = index === 0 ? ['โครงการ', 'ผู้รับผิดชอบ', 'สถานะ', 'ความคืบหน้า', 'กำหนดส่ง'] : project ? [project.name, project.owner, project.status, `${project.progress}%`, project.due] : number === 7 ? ['ค่าเฉลี่ย', '', '', `${Math.round(workAverage)}%`, ''] : [];
-      return `<tr><th class="row-number" scope="row">${number}</th>${columns.map((column, cell) => {
-        const selected = number === 7 && cell === 3;
-        const statusClass = project && cell === 2 ? ` status-${project.status === 'เสร็จสิ้น' ? 'complete' : project.status === 'ตรวจทาน' ? 'review' : 'ongoing'}` : '';
-        return `<${number === 1 ? 'th' : 'td'} ${number === 1 ? 'scope="col"' : ''} class="sheet-cell${number === 1 && cell < 5 ? ' data-heading' : ''}${selected ? ' selected-cell' : ''}${statusClass}${cell === 3 ? ' numeric-cell' : ''}">${values[cell] || ''}</${number === 1 ? 'th' : 'td'}>`;
-      }).join('')}</tr>`;
-    }).join('');
-    element.innerHTML = `<header class="document-header"><span class="document-icon" aria-hidden="true">X</span><h1>รายงานผลการดำเนินงาน Q4</h1><span class="save-status">${icon('check')}บันทึกแล้ว</span><span class="document-period">ตุลาคม — ธันวาคม 2026</span><button class="document-close" type="button" aria-label="ปิดเอกสาร" title="ปิดเอกสาร">${icon('close')}</button></header>
-      <nav class="document-menu" aria-label="เมนูเอกสาร"><span>ไฟล์</span><span class="current-menu">หน้าแรก</span><span>แทรก</span><span>ข้อมูล</span><span>ตรวจทาน</span></nav>
-      <div class="document-ribbon" aria-label="การจัดรูปแบบเอกสาร"><div class="ribbon-group"><span class="ribbon-large" aria-hidden="true">▤</span><span>วาง</span><small>คลิปบอร์ด</small></div><div class="ribbon-group"><span class="font-face">TH Sarabun New <span>⌄</span></span><span class="font-size">11 ⌄</span><div class="ribbon-format"><b>B</b><i>I</i><u>U</u><span>▦</span><span class="text-highlight">A</span></div><small>แบบอักษร</small></div><div class="ribbon-group"><span class="ribbon-format">≡　≡　≡</span><span>ตัดข้อความอัตโนมัติ</span><small>การจัดแนว</small></div><div class="ribbon-group"><span class="ribbon-format">ทั่วไป　⌄</span><span>฿　%　.00</span><small>ตัวเลข</small></div><div class="ribbon-group"><span class="ribbon-large" aria-hidden="true">▦</span><span>จัดรูปแบบตาราง</span><small>สไตล์</small></div><div class="ribbon-group"><span class="ribbon-large" aria-hidden="true">∑</span><span>ผลรวมอัตโนมัติ</span><small>การแก้ไข</small></div></div>
-      <div class="formula-bar"><span class="cell-address">D7 <span>⌄</span></span><span class="formula-symbol" aria-hidden="true">ƒx</span><span class="formula-value">=AVERAGE(D2:D5)</span></div>
-      <div class="sheet-scroll"><div class="sheet-canvas"><table class="work-sheet" aria-label="ความคืบหน้าโครงการ Q4"><colgroup><col class="row-number-col">${columns.map((_, index) => `<col class="${index < 5 ? 'data-col' : 'empty-col'}">`).join('')}</colgroup><thead><tr><th aria-label="แถว"></th>${columns.map(column => `<th scope="col"${column === 'D' ? ' class="selected-column"' : ''}>${column}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table><figure class="work-chart"><figcaption>ความคืบหน้าโครงการ</figcaption>${progressChart()}</figure></div></div>
-      <div class="document-sheet-tabs"><span class="sheet-navigation" aria-hidden="true">‹　›</span><span class="document-sheet-tab selected-sheet">สรุปภาพรวม</span><span class="document-sheet-tab">แผนงาน</span><span class="document-sheet-tab">งบประมาณ</span></div>
-      <footer class="document-footer"><span>พร้อม</span><span>ค่าเฉลี่ย: ${Math.round(workAverage)}%　จำนวน: ${workProjects.length}　ผลรวม: ${workTotal}%</span><span class="document-zoom">▦　 ─────●──　100%</span></footer>`;
+    element.setAttribute('aria-label', 'พื้นที่ทำงานจำลอง (Work Persona View)');
+
+    element.innerHTML = `
+      <!-- Top Unified Persona Switcher Bar -->
+      <nav class="work-persona-switcher" role="toolbar" aria-label="เลือก Persona การทำงาน">
+        <div class="switcher-brand">
+          <span class="switcher-brand-icon" aria-hidden="true">💼</span>
+          <span class="switcher-brand-title">WORK PERSONA:</span>
+        </div>
+        <div class="switcher-tabs" role="tablist">
+          <button type="button" class="persona-tab-btn ${currentPersona === 'accountant' ? 'active' : ''}" data-persona="accountant" role="tab" aria-selected="${currentPersona === 'accountant'}" title="Accountant: Excel Q4 Financial Spreadsheet">
+            <span class="persona-tab-icon">📊</span>
+            <span class="persona-tab-name">Accountant</span>
+            <span class="persona-tab-badge">Excel</span>
+          </button>
+          <button type="button" class="persona-tab-btn ${currentPersona === 'developer' ? 'active' : ''}" data-persona="developer" role="tab" aria-selected="${currentPersona === 'developer'}" title="Developer: VS Code Dark Theme">
+            <span class="persona-tab-icon">💻</span>
+            <span class="persona-tab-name">Developer</span>
+            <span class="persona-tab-badge">VS Code</span>
+          </button>
+          <button type="button" class="persona-tab-btn ${currentPersona === 'designer' ? 'active' : ''}" data-persona="designer" role="tab" aria-selected="${currentPersona === 'designer'}" title="Designer: Figma Design Workspace">
+            <span class="persona-tab-icon">🎨</span>
+            <span class="persona-tab-name">Designer</span>
+            <span class="persona-tab-badge">Figma</span>
+          </button>
+          <button type="button" class="persona-tab-btn ${currentPersona === 'pm' ? 'active' : ''}" data-persona="pm" role="tab" aria-selected="${currentPersona === 'pm'}" title="PM: Jira Sprint 42 Kanban Board">
+            <span class="persona-tab-icon">📋</span>
+            <span class="persona-tab-name">PM</span>
+            <span class="persona-tab-badge">Jira</span>
+          </button>
+        </div>
+        <div class="switcher-meta">
+          <button class="emergency-panic-btn" type="button" data-action="emergency-panic" title="กด B หรือ F8 หรือคลิกเพื่อเปิดจอฟ้า (BSOD) ฉุกเฉิน">🚨 ฉุกเฉิน: กด B เพื่อจอฟ้า (BSOD)</button>
+          <span class="switcher-autosave" title="บันทึกข้อมูลล่าสุดแล้ว">● บันทึกแล้ว</span>
+          <button class="document-close switcher-close" type="button" aria-label="ปิดเอกสาร" title="ปิดเอกสาร">${icon('close')}</button>
+        </div>
+      </nav>
+
+      <!-- Persona Stage (Active persona renders here) -->
+      <div class="work-persona-stage"></div>
+    `;
+
     root.append(element);
-    close = element.querySelector('.document-close');
-    close.addEventListener('click', closeDocument);
+    stageElement = element.querySelector('.work-persona-stage');
+
+    renderCurrentPersona();
+
+    // Universal delegation for all interactive elements within the work view
+    element.addEventListener('click', (event) => {
+      // 0. Emergency Panic BSOD clicked
+      const panicBtn = event.target.closest('[data-action="emergency-panic"], .emergency-panic-btn');
+      if (panicBtn) {
+        onPanic?.();
+        return;
+      }
+
+      // 1. Close button clicked
+      const closeBtn = event.target.closest('.document-close');
+      if (closeBtn) {
+        closeDocument();
+        return;
+      }
+
+      // 2. Persona Switcher tab clicked
+      const switchBtn = event.target.closest('.persona-tab-btn');
+      if (switchBtn) {
+        const personaId = switchBtn.dataset.persona;
+        if (personaId && personaId !== currentPersona) {
+          setPersona(personaId);
+        }
+        return;
+      }
+
+      // 3. Developer Persona: File switching in tabs or explorer
+      const fileTarget = event.target.closest('.vsc-tab, .vsc-tree-file');
+      if (fileTarget) {
+        const fileName = fileTarget.dataset.file;
+        if (fileName && fileName !== developerState.selectedFile) {
+          developerState.selectedFile = fileName;
+          renderCurrentPersona();
+        }
+        return;
+      }
+
+      // 4. Designer Persona: Layer clicking
+      const layerItem = event.target.closest('.figma-layer-item');
+      if (layerItem) {
+        element.querySelectorAll('.figma-layer-item').forEach(el => el.classList.remove('selected-layer'));
+        layerItem.classList.add('selected-layer');
+        return;
+      }
+
+      // 5. Designer Persona: Tool clicking
+      const figmaTool = event.target.closest('.figma-tool');
+      if (figmaTool) {
+        element.querySelectorAll('.figma-tool').forEach(el => el.classList.remove('active'));
+        figmaTool.classList.add('active');
+        return;
+      }
+
+      // 6. PM Persona: Filter pill clicking
+      const jiraPill = event.target.closest('.jira-pill');
+      if (jiraPill) {
+        element.querySelectorAll('.jira-pill').forEach(el => el.classList.remove('active'));
+        jiraPill.classList.add('active');
+        return;
+      }
+
+      // 7. Accountant Persona: Sheet tab clicking
+      const sheetTab = event.target.closest('.document-sheet-tab:not(.add-tab)');
+      if (sheetTab) {
+        element.querySelectorAll('.document-sheet-tab').forEach(el => el.classList.remove('selected-sheet'));
+        sheetTab.classList.add('selected-sheet');
+        return;
+      }
+
+      // 8. Accountant Persona: Cell selection
+      const cell = event.target.closest('.sheet-cell');
+      if (cell) {
+        element.querySelectorAll('.sheet-cell').forEach(el => el.classList.remove('selected-cell'));
+        cell.classList.add('selected-cell');
+        const cellAddr = cell.dataset.cell;
+        const addrEl = element.querySelector('.cell-address');
+        if (addrEl && cellAddr) addrEl.innerHTML = `${cellAddr} <span>⌄</span>`;
+        const formulaVal = element.querySelector('.formula-value');
+        if (formulaVal) formulaVal.textContent = cell.textContent ? `=${cell.textContent}` : '';
+        return;
+      }
+    });
+
     update({ canReturn: false, unknown: true });
   }
+
   function show() {
     if (!element) return;
     element.hidden = false;
     element.inert = false;
+    document.title = PERSONAS[currentPersona]?.windowTitle || 'รายงานผลการดำเนินงาน Q4';
     element.focus({ preventScroll: true });
   }
+
   function hide() {
     if (!element) return;
     element.hidden = true;
     element.inert = true;
   }
+
   function update({ canReturn = false, unknown = false } = {}) {
     returnAllowed = Boolean(canReturn || unknown);
-    if (!close) return;
-    close.disabled = !returnAllowed;
-    close.title = returnAllowed ? 'ปิดเอกสาร' : 'กำลังประมวลผลเอกสาร';
+    updateCloseButtons();
   }
+
   function dispose() {
-    close?.removeEventListener('click', closeDocument);
     element?.remove();
     mounted = false;
   }
-  return { mount, show, hide, update, dispose };
+
+  return { mount, show, hide, update, dispose, setPersona, getPersona: () => currentPersona };
 }

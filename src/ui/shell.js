@@ -5,11 +5,20 @@ const tabData = {
   ai: { title: 'AI ขี้เกียจ', icon: 'bot', address: 'ai.local', caption: 'ถามได้ ไม่รับปาก' },
   music: { title: 'เพลงเงียบ', icon: 'music', address: 'music.local', caption: 'ดังได้ เงียบด้วย' },
 };
-const themes = { win95: 'Windows 95', xp: 'Windows XP', win11: 'Windows 11' };
+export const themes = {
+  win11: 'Windows 11',
+  dark: 'Dark Mode',
+  win95: 'Windows 95',
+  xp: 'Windows XP',
+  gov: 'ราชการไทย 1.0',
+  hi5: 'Hi5 Y2K (2005)',
+  matrix: 'Matrix 1999',
+  icu: 'ICU Monitor',
+};
 
 /** Stable DOM shell. Feature factories mount once into refs.panels. */
 export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onToggleCamera, onToggleHud } = {}) {
-  const refs = { leisure: null, panels: {}, vision: null, launcher: null, settings: null, status: null, tabs: {} };
+  const refs = { leisure: null, panels: {}, vision: null, launcher: null, settings: null, status: null, tabs: {}, themePicker: null, dropdownToggle: null, dropdownMenu: null };
   let mounted = false;
   let selectedTab = 'youtube';
   let settingsOpen = false;
@@ -36,7 +45,22 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onTo
         <div class="header-actions">
           <button class="button camera-button" data-action="toggle-camera" type="button" title="เปิด/ปิดกล้อง">${icon('camera')}<span class="camera-btn-text">เปิดกล้อง AI</span></button>
           <button class="button hud-button" data-action="toggle-hud" type="button" title="เปิด/ปิดจอเรดาร์ส่องหลัง">${icon('bot')}<span>จอเรดาร์ AI</span></button>
-          <div class="theme-picker" role="group" aria-label="ธีมหน้าต่าง">${Object.entries(themes).map(([id, label]) => `<button class="theme-button" data-theme-choice="${id}" type="button" aria-pressed="${id === 'win11'}">${icon('windows')}<span>${label}</span></button>`).join('')}</div>
+          <div class="theme-picker" role="region" aria-label="ธีมหน้าต่าง">
+            <button class="theme-dropdown-toggle button" type="button" aria-haspopup="listbox" aria-expanded="false" title="เลือกธีมหน้าต่าง">
+              <span class="theme-swatch theme-swatch-win11" aria-hidden="true"></span>
+              <span class="theme-current-label">Windows 11</span>
+              ${icon('chevronDown', 'theme-chevron')}
+            </button>
+            <div class="theme-dropdown-menu" role="listbox" aria-label="รายการธีม" hidden>
+              ${Object.entries(themes).map(([id, label]) => `
+                <button class="theme-button theme-option" data-theme-choice="${id}" type="button" role="option" aria-pressed="${id === 'win11'}" aria-selected="${id === 'win11'}">
+                  <span class="theme-swatch theme-swatch-${id}" aria-hidden="true"></span>
+                  <span class="theme-option-label">${label}</span>
+                  <span class="theme-option-check" aria-hidden="true">${icon('check')}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
           <button class="panic-button" data-action="panic" type="button">${icon('briefcase')}<span>ทำงานอยู่ครับ!</span><kbd>B</kbd></button>
         </div>
       </header>
@@ -53,6 +77,58 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onTo
     refs.vision = leisure.querySelector('.vision-mount');
     refs.launcher = leisure.querySelector('.launcher-mount');
     refs.settings = leisure.querySelector('.settings-mount');
+    refs.themePicker = leisure.querySelector('.theme-picker');
+    refs.dropdownToggle = leisure.querySelector('.theme-dropdown-toggle');
+    refs.dropdownMenu = leisure.querySelector('.theme-dropdown-menu');
+    refs.triggerSwatch = refs.dropdownToggle?.querySelector('.theme-swatch') || leisure.querySelector('.theme-swatch');
+    refs.triggerLabel = refs.dropdownToggle?.querySelector('.theme-current-label') || leisure.querySelector('.theme-current-label');
+
+    function setDropdownOpen(open) {
+      if (!refs.dropdownMenu) return;
+      refs.dropdownMenu.hidden = !open;
+      refs.dropdownToggle?.setAttribute('aria-expanded', String(open));
+      if (open) {
+        const activeOption = refs.dropdownMenu.querySelector('[aria-pressed="true"]') || refs.dropdownMenu.querySelector('.theme-button');
+        activeOption?.focus();
+      }
+    }
+
+    if (refs.dropdownToggle) {
+      listen(refs.dropdownToggle, 'click', (e) => {
+        e.stopPropagation();
+        setDropdownOpen(refs.dropdownMenu.hidden);
+      });
+    }
+
+    listen(document, 'click', (e) => {
+      if (refs.themePicker && !refs.themePicker.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    });
+
+    if (refs.themePicker) {
+      listen(refs.themePicker, 'keydown', (event) => {
+        if (event.key === 'Escape') {
+          setDropdownOpen(false);
+          refs.dropdownToggle?.focus();
+          event.stopPropagation();
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          const buttons = Array.from(refs.dropdownMenu.querySelectorAll('[data-theme-choice]'));
+          if (refs.dropdownMenu.hidden) {
+            event.preventDefault();
+            setDropdownOpen(true);
+          } else if (buttons.length > 0) {
+            event.preventDefault();
+            const currentIndex = buttons.indexOf(document.activeElement);
+            const nextIndex = event.key === 'ArrowDown'
+              ? (currentIndex + 1) % buttons.length
+              : (currentIndex - 1 + buttons.length) % buttons.length;
+            buttons[nextIndex].focus();
+          }
+        }
+      });
+    }
+
     for (const id of Object.keys(tabData)) {
       refs.panels[id] = leisure.querySelector(`#panel-${id}`);
       refs.tabs[id] = leisure.querySelector(`#tab-${id}`);
@@ -70,7 +146,18 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onTo
         onTab?.(next);
       });
     }
-    for (const button of leisure.querySelectorAll('[data-theme-choice]')) listen(button, 'click', () => onTheme?.(button.dataset.themeChoice));
+    for (const button of leisure.querySelectorAll('[data-theme-choice]')) {
+      listen(button, 'click', () => {
+        const choice = button.dataset.themeChoice;
+        setDropdownOpen(false);
+        refs.dropdownToggle?.focus();
+        if (choice && themes[choice]) {
+          document.documentElement.dataset.theme = choice;
+          updateThemeUI(choice);
+          onTheme?.(choice);
+        }
+      });
+    }
     listen(leisure.querySelector('[data-action="panic"]'), 'click', () => onPanic?.());
     listen(leisure.querySelector('[data-action="reset"]'), 'click', () => onReset?.());
     listen(leisure.querySelector('[data-action="settings"]'), 'click', () => setSettings(!settingsOpen));
@@ -80,9 +167,29 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onTo
     if (hudBtn) listen(hudBtn, 'click', () => onToggleHud?.());
     update({ activeTab: selectedTab, theme: document.documentElement.dataset.theme || 'win11' });
   }
+
+  function updateThemeUI(theme) {
+    if (!theme || !themes[theme]) return;
+    if (refs.leisure) {
+      if (refs.triggerLabel) refs.triggerLabel.textContent = themes[theme];
+      if (refs.triggerSwatch) refs.triggerSwatch.className = `theme-swatch theme-swatch-${theme}`;
+      for (const button of refs.leisure.querySelectorAll('[data-theme-choice]')) {
+        const isSelected = button.dataset.themeChoice === theme;
+        button.setAttribute('aria-pressed', String(isSelected));
+        button.setAttribute('aria-selected', String(isSelected));
+      }
+    }
+  }
+
   function update({ activeTab, theme, status, blinkCount, cameraRunning } = {}) {
-    if (theme && themes[theme]) document.documentElement.dataset.theme = theme;
-    else if (!document.documentElement.dataset.theme) document.documentElement.dataset.theme = 'win11';
+    const activeTheme = theme || document.documentElement.dataset.theme || 'win11';
+    if (themes[activeTheme]) {
+      document.documentElement.dataset.theme = activeTheme;
+      updateThemeUI(activeTheme);
+    } else if (!document.documentElement.dataset.theme) {
+      document.documentElement.dataset.theme = 'win11';
+      updateThemeUI('win11');
+    }
     if (!mounted) return;
     if (cameraRunning !== undefined) {
       const camLabel = refs.leisure?.querySelector('.camera-btn-text');
@@ -100,7 +207,7 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onTo
       refs.leisure.querySelector('.address-text').textContent = tabData[activeTab].address;
       refs.leisure.querySelector('.address-caption').textContent = tabData[activeTab].caption;
     }
-    if (theme) for (const button of refs.leisure.querySelectorAll('[data-theme-choice]')) button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme));
+    if (theme && themes[theme]) updateThemeUI(theme);
     if (status !== undefined) refs.status.textContent = typeof status === 'string' ? status : (status?.text || status?.message || 'กล้อง: กำลังเตรียม');
     if (blinkCount !== undefined) refs.leisure.querySelector('.blink-counter strong').textContent = String(blinkCount);
   }

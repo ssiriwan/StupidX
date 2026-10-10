@@ -2,7 +2,7 @@ export const LEISURE = 'LEISURE';
 export const WORK_LOCKED = 'WORK_LOCKED';
 export const WORK_READY = 'WORK_READY';
 const TABS = new Set(['youtube', 'ai', 'music']);
-const THEMES = new Set(['win95', 'xp', 'win11']);
+export const THEMES = new Set(['win11', 'dark', 'win95', 'xp', 'gov', 'hi5', 'matrix', 'icu']);
 
 export function ignoresShortcut(event) {
   if (event.isComposing || event.keyCode === 229 || event.repeat || event.ctrlKey || event.altKey || event.metaKey) return true;
@@ -22,6 +22,7 @@ export class SessionController {
     this.observation = null;
     this.safeSince = null;
     this.reason = null;
+    this.bsod = false;
   }
 
   isFresh(now = this.clock()) {
@@ -39,7 +40,23 @@ export class SessionController {
       canReturn: this.mode === WORK_READY && fresh && !this.observation.present,
       safeRemaining: this.safeSince === null ? this.safeDelay : Math.max(0, this.safeDelay - (this.clock() - this.safeSince)),
       reason: this.reason,
+      bsod: this.bsod,
     };
+  }
+
+  triggerBsod() {
+    if (this.mode === LEISURE) return false;
+    if (this.bsod) return true;
+    this.bsod = true;
+    this.emit();
+    return true;
+  }
+
+  dismissBsod() {
+    if (!this.bsod) return false;
+    this.bsod = false;
+    this.emit();
+    return true;
   }
 
   emit() { this.onChange(this.snapshot()); }
@@ -88,6 +105,7 @@ export class SessionController {
   }
 
   requestReturn({ acknowledgeUnknown = false } = {}) {
+    if (this.bsod) return false;
     this.tick(false);
     if (this.mode === LEISURE) return true;
     const state = this.snapshot();
@@ -133,6 +151,7 @@ export class SessionController {
     this.observation = null;
     this.safeSince = null;
     this.reason = null;
+    this.bsod = false;
     this.changeMode(LEISURE);
     this.emit();
   }

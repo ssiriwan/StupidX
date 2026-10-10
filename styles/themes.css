@@ -1,6 +1,13 @@
 /* Feature contract: these generic tokens are available in every theme.
    --surface, --surface-alt, --text, --muted, --border, --accent,
-   --accent-text, --radius, --shadow. Additional chrome/sheet tokens are UI-only. */
+   --accent-text, --radius, --shadow, --chrome, --sheet-*.
+   Additional tokens: --desktop, --chrome-text, --tab-idle, --tab-selected,
+   --tab-text, --brand-fill, --button-shadow, --panic, --sheet-accent,
+   --sheet-grid, --sheet-header, --sheet-chrome. */
+
+/* ========================================================
+   THEME 1: WINDOWS 11 (Modern Fluent Design)
+   ======================================================== */
 :root,
 :root[data-theme="win11"] {
   color-scheme: light;
@@ -13,111 +20,2400 @@
   --accent: #096bf2;
   --accent-text: #ffffff;
   --radius: 12px;
-  --shadow: 0 10px 30px #263b5510, 0 1px 3px #263b550c;
-  --chrome: #f3f7fccc;
+  --shadow: 0 10px 30px rgba(20, 35, 57, 0.08), 0 1px 3px rgba(20, 35, 57, 0.05);
+  --chrome: rgba(243, 247, 252, 0.85);
   --chrome-text: #142339;
   --tab-idle: #e8eef5;
   --tab-selected: #096bf2;
   --tab-text: #ffffff;
   --brand-fill: #d0e7f5;
-  --button-shadow: 0 1px 2px #1423390d;
-  --panic: #f73539;
-  --sheet-accent: #268151;
-  --sheet-grid: #dce4e9;
+  --button-shadow: 0 1px 2px rgba(20, 35, 57, 0.06);
+  --panic: #e81123;
+  --sheet-accent: #107c41;
+  --sheet-grid: #e1dfdd;
   --sheet-header: #dcefe4;
   --sheet-chrome: #f0f4f7;
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
+
+/* ========================================================
+   THEME 2: WINDOWS 11 DARK MODE (OLED Dark & Slate Surfaces)
+   ======================================================== */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --desktop: #18181b;
+  --surface: #27272a;
+  --surface-alt: #1f1f23;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --border: #3f3f46;
+  --accent: #3b82f6;
+  --accent-text: #ffffff;
+  --radius: 12px;
+  --shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --chrome: rgba(39, 39, 42, 0.88);
+  --chrome-text: #f4f4f5;
+  --tab-idle: #18181b;
+  --tab-selected: #3b82f6;
+  --tab-text: #ffffff;
+  --brand-fill: rgba(59, 130, 246, 0.25);
+  --button-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --panic: #ef4444;
+  --sheet-accent: #22c55e;
+  --sheet-grid: #3f3f46;
+  --sheet-header: #323236;
+  --sheet-chrome: #1c1c1f;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* ========================================================
+   THEME 3: WINDOWS 95 (Authentic Gray, 3D Bevels & Navy)
+   ======================================================== */
 :root[data-theme="win95"] {
-  --desktop: #f4f1e6;
-  --surface: #ffffff;
+  color-scheme: light;
+  --desktop: #008080;
+  --surface: #c0c0c0;
   --surface-alt: #dfdfdf;
-  --text: #111111;
-  --muted: #505050;
-  --border: #858585;
+  --text: #000000;
+  --muted: #555555;
+  --border: #808080;
   --accent: #000080;
   --accent-text: #ffffff;
   --radius: 0px;
   --shadow: 2px 2px 0 #000000;
   --chrome: #c0c0c0;
-  --chrome-text: #111111;
+  --chrome-text: #000000;
   --tab-idle: #c0c0c0;
   --tab-selected: #000080;
   --tab-text: #ffffff;
   --brand-fill: #ffff62;
-  --button-shadow: inset 2px 2px #ffffff, inset -2px -2px #454545;
-  --panic: #f22626;
-  --sheet-accent: #267847;
-  --sheet-grid: #d2d2d2;
-  --sheet-header: #d4ead7;
+  --button-shadow: inset 2px 2px #ffffff, inset -2px -2px #000000;
+  --panic: #d90000;
+  --sheet-accent: #000080;
+  --sheet-grid: #808080;
+  --sheet-header: #c0c0c0;
   --sheet-chrome: #c0c0c0;
-  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+  font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
 }
+
+/* ========================================================
+   THEME 4: WINDOWS XP (Luna Blue, Bliss Green & Orange/Blue)
+   ======================================================== */
 :root[data-theme="xp"] {
-  --desktop: #b5d7ff;
-  --surface: #fffef9;
-  --surface-alt: #e8f1fb;
+  color-scheme: light;
+  --desktop: #5a8fed;
+  --surface: #ffffff;
+  --surface-alt: #eef4fc;
   --text: #0c2758;
-  --muted: #64758c;
-  --border: #a5bedc;
-  --accent: #076af1;
+  --muted: #536c8d;
+  --border: #7f9db9;
+  --accent: #0869ea;
   --accent-text: #ffffff;
-  --radius: 7px;
-  --shadow: 0 3px 12px #073c8f2b;
-  --chrome: #fffbed;
+  --radius: 6px;
+  --shadow: 0 4px 14px rgba(7, 60, 143, 0.25);
+  --chrome: #ece9d8;
   --chrome-text: #0c2758;
-  --tab-idle: linear-gradient(#d4e7fc, #aecfed);
-  --tab-selected: #fffbed;
+  --tab-idle: linear-gradient(to bottom, #dbe8fb, #b9d1f3);
+  --tab-selected: linear-gradient(to bottom, #ffffff, #ece9d8);
   --tab-text: #0c2758;
   --brand-fill: #c8edff;
-  --button-shadow: inset 0 1px 2px #ffffff, 0 1px 2px #15458620;
-  --panic: #ef263b;
-  --sheet-accent: #298752;
-  --sheet-grid: #cddce8;
-  --sheet-header: #d9eddd;
-  --sheet-chrome: #f6f4e9;
-  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+  --button-shadow: inset 0 1px 0 #ffffff, 0 1px 2px rgba(10, 50, 120, 0.2);
+  --panic: #ea580c;
+  --sheet-accent: #2e8b57;
+  --sheet-grid: #c7d7e8;
+  --sheet-header: #dbe8fb;
+  --sheet-chrome: #ece9d8;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
 }
+
+/* ========================================================
+   THEME 5: THAI GOV 1.0 (ระบบจัดซื้อจัดจ้างภาครัฐ e-GP 1.0 / สารบรรณไทย)
+   ======================================================== */
+:root[data-theme="gov"] {
+  color-scheme: light;
+  --desktop: #ece5d8;
+  --surface: #fdfbf7;
+  --surface-alt: #f4ece0;
+  --text: #0b2545;
+  --muted: #4e627a;
+  --border: #c59b27;
+  --accent: #0b2545;
+  --accent-text: #fdfbf7;
+  --radius: 0px;
+  --shadow: 0 4px 16px rgba(11, 37, 69, 0.16), 2px 2px 0 rgba(197, 155, 39, 0.35);
+  --chrome: #0b2545;
+  --chrome-text: #fdfbf7;
+  --tab-idle: #eadeca;
+  --tab-selected: #0b2545;
+  --tab-text: #fdfbf7;
+  --brand-fill: #c59b27;
+  --button-shadow: inset 1px 1px #ffffff, inset -1px -1px #8f6f1c, 0 1px 2px rgba(11, 37, 69, 0.18);
+  --panic: #991b1b;
+  --sheet-accent: #0b2545;
+  --sheet-grid: #d8cebc;
+  --sheet-header: #eadeca;
+  --sheet-chrome: #f3ece0;
+  font-family: 'TH Sarabun New', 'Angsana New', 'Sarabun', 'TH SarabunPSK', serif;
+}
+
+/* ========================================================
+   THEME 5: HI5 Y2K GLAM / DEK-D 2005
+   ======================================================== */
+:root[data-theme="hi5"] {
+  color-scheme: dark;
+  --desktop: #120018;
+  --surface: #1d0326;
+  --surface-alt: #2c053a;
+  --text: #ffebf7;
+  --muted: #e670ba;
+  --border: #ff1493;
+  --accent: #ff1493;
+  --accent-text: #ffffff;
+  --radius: 14px;
+  --shadow: 0 0 18px rgba(255, 20, 147, 0.45), 0 0 30px rgba(0, 255, 255, 0.2);
+  --chrome: #260233;
+  --chrome-text: #ffebf7;
+  --tab-idle: #20012b;
+  --tab-selected: #ff1493;
+  --tab-text: #ffffff;
+  --brand-fill: #ff69b4;
+  --button-shadow: 0 0 10px rgba(255, 20, 147, 0.5), inset 0 1px 2px #ff8cd4;
+  --panic: #ff0055;
+  --sheet-accent: #ff1493;
+  --sheet-grid: #400a50;
+  --sheet-header: #350843;
+  --sheet-chrome: #1f0328;
+  font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", "Chalkboard SE", cursive, sans-serif;
+}
+
+/* ========================================================
+   THEME 6: HACKER MATRIX 1999
+   ======================================================== */
+:root[data-theme="matrix"] {
+  color-scheme: dark;
+  --desktop: #000000;
+  --surface: #0d1117;
+  --surface-alt: #081a0e;
+  --text: #00ff66;
+  --muted: #00aa44;
+  --border: #003311;
+  --accent: #00ff66;
+  --accent-text: #000000;
+  --radius: 0px;
+  --shadow: 0 0 20px rgba(0, 255, 102, 0.25), inset 0 0 15px rgba(0, 51, 17, 0.5);
+  --chrome: #050d08;
+  --chrome-text: #00ff66;
+  --tab-idle: #040a06;
+  --tab-selected: #00220d;
+  --tab-text: #00ff66;
+  --brand-fill: #003311;
+  --button-shadow: inset 0 0 8px rgba(0, 255, 102, 0.2), 0 0 5px #003311;
+  --panic: #ff1133;
+  --sheet-accent: #00ff66;
+  --sheet-grid: #002b0f;
+  --sheet-header: #001f0a;
+  --sheet-chrome: #050d08;
+  font-family: Consolas, "Courier New", "Cascadia Code", "Lucida Console", Monaco, monospace;
+}
+
+/* ========================================================
+   THEME 5: ICU MEDICAL MONITOR (Oscilloscope Green, LCD, ECG)
+   ======================================================== */
+:root[data-theme="icu"] {
+  color-scheme: dark;
+  --desktop: #05080c;
+  --surface: #0a1118;
+  --surface-alt: #0e1722;
+  --text: #00e676;
+  --muted: #00b0ff;
+  --border: #00e67633;
+  --accent: #00e676;
+  --accent-text: #05080c;
+  --radius: 4px;
+  --shadow: 0 0 24px rgba(0, 230, 118, 0.14), 0 0 4px rgba(0, 230, 118, 0.28);
+  --chrome: #08121a;
+  --chrome-text: #00e5ff;
+  --tab-idle: #060d14;
+  --tab-selected: #00e676;
+  --tab-text: #05080c;
+  --brand-fill: #002d18;
+  --button-shadow: inset 0 0 8px rgba(0, 230, 118, 0.2), 0 0 10px rgba(0, 230, 118, 0.25);
+  --panic: #ff1744;
+  --sheet-accent: #00e676;
+  --sheet-grid: #00331e;
+  --sheet-header: #041c12;
+  --sheet-chrome: #071017;
+  font-family: Consolas, "Courier New", monospace;
+
+  /* ICU Medical Monitor specific palette tokens */
+  --icu-bg: #05080c;
+  --icu-green: #00e676;
+  --icu-amber: #ffab00;
+  --icu-cyan: #00e5ff;
+  --icu-alert: #ff1744;
+  --icu-grid: rgba(0, 230, 118, 0.06);
+}
+
+/* ========================================================
+   WINDOWS 11 FLUENT REFINEMENTS
+   ======================================================== */
+[data-theme="win11"] .app-window {
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(213, 223, 235, 0.8);
+}
+[data-theme="win11"] .button-primary:hover {
+  background: #005fb8;
+  border-color: #005fb8;
+}
+[data-theme="win11"] .tab-strip {
+  gap: 3px;
+  padding: 4px 6px 0;
+}
+[data-theme="win11"] .app-tab {
+  transition: background 0.15s ease, color 0.15s ease;
+}
+[data-theme="win11"] .app-tab:hover:not([aria-selected="true"]) {
+  background: #dfe7f1;
+}
+
+/* ========================================================
+   WINDOWS 11 DARK MODE REFINEMENTS
+   ======================================================== */
+[data-theme="dark"] body {
+  background: var(--desktop);
+  color: var(--text);
+}
+[data-theme="dark"] .app-window {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+[data-theme="dark"] .field,
+[data-theme="dark"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
+[data-theme="dark"] .settings-grid select,
+[data-theme="dark"] textarea {
+  background: #18181b;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] .field:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+[data-theme="dark"] .watch-status {
+  background: #14281d;
+  border-color: #1b4d2e;
+  color: #86efac;
+}
+[data-theme="dark"] .status-dot {
+  background: #22c55e;
+}
+[data-theme="dark"] .theme-picker {
+  background: #18181b;
+  border-color: #3f3f46;
+}
+[data-theme="dark"] .theme-button {
+  color: #a1a1aa;
+}
+[data-theme="dark"] .theme-button[aria-pressed="true"] {
+  background: #27272a;
+  color: #3b82f6;
+  border-color: #3f3f46;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .app-tab {
+  background: #18181b;
+  color: #a1a1aa;
+  border-color: #3f3f46;
+}
+[data-theme="dark"] .app-tab:hover:not([aria-selected="true"]) {
+  background: #222226;
+  color: #f4f4f5;
+}
+[data-theme="dark"] .app-tab[aria-selected="true"] {
+  background: var(--surface);
+  color: #ffffff;
+  border-color: var(--border);
+  border-bottom-color: var(--surface);
+}
+[data-theme="dark"] .address-bar {
+  background: var(--chrome);
+  border-color: var(--border);
+}
+[data-theme="dark"] .address-field {
+  background: #18181b;
+  border-color: #3f3f46;
+}
+[data-theme="dark"] .app-footer {
+  background: var(--chrome);
+  border-color: var(--border);
+}
+[data-theme="dark"] .button {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #f4f4f5;
+}
+[data-theme="dark"] .button:hover {
+  background: #323236;
+}
+[data-theme="dark"] .button-primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+[data-theme="dark"] .button-primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+[data-theme="dark"] .work-view {
+  background: #18181b;
+  color: #f4f4f5;
+}
+[data-theme="dark"] .work-sheet {
+  background: #222226;
+  color: #f4f4f5;
+}
+[data-theme="dark"] .work-sheet thead th,
+[data-theme="dark"] .work-sheet th.row-number {
+  background: #18181b;
+  color: #a1a1aa;
+  border-color: var(--sheet-grid);
+}
+[data-theme="dark"] .work-sheet .data-heading {
+  background: #323236;
+  color: #86efac;
+}
+[data-theme="dark"] .work-sheet .status-ongoing {
+  background: #451a03;
+  color: #fde047;
+}
+[data-theme="dark"] .work-sheet .status-review {
+  background: #172554;
+  color: #93c5fd;
+}
+[data-theme="dark"] .work-sheet .status-complete {
+  background: #052e16;
+  color: #86efac;
+}
+[data-theme="dark"] .work-sheet .selected-cell {
+  background: #143321;
+  outline-color: var(--sheet-accent);
+}
+[data-theme="dark"] .work-sheet .selected-column {
+  background: #1e3a2b;
+  color: #86efac;
+}
+[data-theme="dark"] .document-ribbon {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+[data-theme="dark"] .yt-placeholder {
+  background: radial-gradient(ellipse at center, #1e293b, #0f172a 70%);
+}
+[data-theme="dark"] .yt-stamp {
+  background: #3b2f0a;
+  color: #fde047;
+  border-color: #715712;
+}
+[data-theme="dark"] .chat-line {
+  background: #1e1e22;
+  border-color: #3f3f46;
+}
+[data-theme="dark"] .chat-line-user {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+[data-theme="dark"] .return-dialog {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #f4f4f5;
+}
+
+/* ========================================================
+   WINDOWS 95 AUTHENTIC STYLING
+   ======================================================== */
 [data-theme="win95"] body {
-  background-image: linear-gradient(#d7d3c53b 1px, transparent 1px), linear-gradient(90deg, #d7d3c53b 1px, transparent 1px);
-  background-size: 12px 12px;
+  background-color: #008080;
+  background-image: radial-gradient(#004d4d 15%, transparent 16%);
+  background-size: 4px 4px;
+}
+[data-theme="win95"] .leisure-shell {
+  border: 3px solid;
+  border-color: #dfdfdf #000000 #000000 #dfdfdf;
+  box-shadow: inset 1px 1px #ffffff, inset -1px -1px #808080;
+  background: #c0c0c0;
+}
+[data-theme="win95"] .app-header {
+  background: #000080;
+  color: #ffffff;
+  padding: 6px 12px;
+  font-weight: 700;
+}
+[data-theme="win95"] .brand-mark {
+  color: #ffffff;
+}
+[data-theme="win95"] .brand-subtitle {
+  color: #d4d0c8;
+}
+[data-theme="win95"] .watch-status {
+  background: #c0c0c0;
+  color: #000000;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow: inset 1px 1px #000000, inset -1px -1px #dfdfdf;
+  border-radius: 0;
+}
+[data-theme="win95"] .status-dot {
+  background: #008000;
+  border-radius: 0;
+}
+[data-theme="win95"] .theme-picker {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  border-radius: 0;
+}
+[data-theme="win95"] .theme-button {
+  border-radius: 0;
+  border: 1px solid transparent;
+}
+[data-theme="win95"] .theme-button[aria-pressed="true"] {
+  background: #000080;
+  color: #ffffff;
+  border: 1px solid #000000;
+  box-shadow: inset 1px 1px #5a7fff, inset -1px -1px #000040;
 }
 [data-theme="win95"] .app-window,
 [data-theme="win95"] .settings-drawer,
 [data-theme="win95"] .app-footer,
-[data-theme="win95"] .document-ribbon {
-  border: 2px solid #333;
-  box-shadow: inset 2px 2px #fff, inset -2px -2px #858585, 2px 2px #111;
+[data-theme="win95"] .document-ribbon,
+[data-theme="win95"] .panel {
+  border: 2px solid;
+  border-color: #dfdfdf #000000 #000000 #dfdfdf;
+  box-shadow: inset 2px 2px #fff, inset -2px -2px #000;
+  border-radius: 0;
 }
 [data-theme="win95"] .button,
-[data-theme="win95"] .app-tab,
-[data-theme="win95"] .theme-button,
+[data-theme="win95"] .camera-button,
+[data-theme="win95"] .hud-button,
 [data-theme="win95"] .panic-button {
-  border: 1px solid #333;
-  box-shadow: var(--button-shadow);
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  box-shadow: inset 2px 2px #fff, inset -2px -2px #000;
+  border-radius: 0;
+  background: #c0c0c0;
+  color: #000000;
 }
 [data-theme="win95"] .button:active,
-[data-theme="win95"] .theme-button:active { box-shadow: inset 2px 2px #454545, inset -2px -2px white; }
-[data-theme="win95"] .app-tab[aria-selected="true"] { box-shadow: inset 2px 2px #7488ff, inset -2px -2px #030340; }
-[data-theme="win95"] .address-field { box-shadow: inset 1px 1px #505050; border: 2px solid #fff; outline: 1px solid #858585; }
-[data-theme="win95"] .brand h1 { letter-spacing: -1.2px; }
-[data-theme="xp"] .leisure-shell { border: 3px solid #0869ea; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px #0746b3, 0 6px 20px #154b8633; }
-[data-theme="xp"] .app-header { background: linear-gradient(#1786ff 0%, #0863ed 15%, #0861ed 85%, #0848b9 100%); color: white; padding: 18px 20px; }
-[data-theme="xp"] .brand-subtitle { color: #dae8ff; }
-[data-theme="xp"] .watch-status { color: #fff; background: #005ad0; border-color: #3987f3; }
-[data-theme="xp"] .theme-picker { background: #d1e4f7; color: #10285b; border-color: #6ca2e7; }
-[data-theme="xp"] .theme-button[aria-pressed="true"] { background: linear-gradient(#3cce4d, #09a222); border-color: #079317; color: #fff; box-shadow: inset 0 2px #98f598; }
-[data-theme="xp"] .tab-strip { background: linear-gradient(#5ba9ff, #69b5ff); padding: 9px 15px 0; gap: 3px; }
-[data-theme="xp"] .app-tab[aria-selected="true"] { border-top: 3px solid #ecbd52; }
-[data-theme="xp"] .app-window { border-radius: 0; border: 0; box-shadow: none; }
-[data-theme="xp"] .app-footer { margin: 0; border-radius: 0; background: #e4f0fb; }
-[data-theme="xp"] .button-primary { background: linear-gradient(#338dff, #0060e8); box-shadow: inset 0 1px #84c0ff, 0 1px 3px #0d45803b; }
-[data-theme="xp"] .work-view { border: 3px solid #076af1; border-radius: 8px 8px 0 0; }
-[data-theme="xp"] .document-header { background: linear-gradient(#2389ff, #0555dd); color: white; }
-[data-theme="xp"] .save-status,
-[data-theme="xp"] .document-period { color: #edf5ff; }
-[data-theme="xp"] .document-close { color: white; background: linear-gradient(#ee8b7b, #d63f27); border: 1px solid white; }
-[data-theme="win95"] .document-header { background: #000080; color: white; padding-block: 7px; }
+[data-theme="win95"] .camera-button:active,
+[data-theme="win95"] .hud-button:active,
+[data-theme="win95"] .panic-button:active,
+[data-theme="win95"] .theme-button:active {
+  border-color: #000000 #ffffff #ffffff #000000;
+  box-shadow: inset 2px 2px #000, inset -2px -2px #fff;
+}
+[data-theme="win95"] .button-primary {
+  font-weight: 700;
+  outline: 1px dotted #000000;
+  outline-offset: -4px;
+}
+[data-theme="win95"] .panic-button {
+  background: #c0c0c0;
+  color: #800000;
+  font-weight: 800;
+}
+[data-theme="win95"] .panic-button:hover {
+  background: #d4d0c8;
+  color: #b00000;
+}
+[data-theme="win95"] .app-tab {
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  border-bottom: 0;
+  box-shadow: inset 2px 2px #fff, inset -2px 0 #000;
+  border-radius: 0;
+  background: #c0c0c0;
+  color: #000000;
+}
+[data-theme="win95"] .app-tab[aria-selected="true"] {
+  background: #c0c0c0;
+  color: #000000;
+  font-weight: 800;
+  border-top: 3px solid #000080;
+  box-shadow: inset 2px 2px #fff, inset -2px 0 #000;
+  margin-bottom: -1px;
+  z-index: 2;
+}
+[data-theme="win95"] .field,
+[data-theme="win95"] .address-field,
+[data-theme="win95"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
+[data-theme="win95"] .settings-grid select,
+[data-theme="win95"] textarea {
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow: inset 2px 2px #000, inset -2px -2px #fff;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+}
+[data-theme="win95"] .brand h1 {
+  letter-spacing: -1.2px;
+}
+[data-theme="win95"] .document-header {
+  background: #000080;
+  color: #ffffff;
+  padding-block: 7px;
+}
 [data-theme="win95"] .save-status,
-[data-theme="win95"] .document-period { color: #e1e1e1; }
-[data-theme="win95"] .document-close { background: #c0c0c0; color: black; box-shadow: var(--button-shadow); border: 1px solid black; }
+[data-theme="win95"] .document-period {
+  color: #e1e1e1;
+}
+[data-theme="win95"] .document-close {
+  background: #c0c0c0;
+  color: #000000;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #000;
+  border-radius: 0;
+}
+[data-theme="win95"] .work-view {
+  border: 3px solid;
+  border-color: #dfdfdf #000000 #000000 #dfdfdf;
+}
+
+/* ========================================================
+   WINDOWS XP LUNA STYLING
+   ======================================================== */
+[data-theme="xp"] body {
+  background-color: #5a8fed;
+  background-image: linear-gradient(to bottom, #3b74e6 0%, #70a4fc 60%, #9bc2fc 100%);
+}
+[data-theme="xp"] .leisure-shell {
+  border: 3px solid #0869ea;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #0746b3, 0 8px 24px rgba(7, 60, 143, 0.35);
+}
+[data-theme="xp"] .app-header {
+  background: linear-gradient(to bottom, #1786ff 0%, #0869ea 15%, #0861ed 85%, #0848b9 100%);
+  color: #ffffff;
+  padding: 16px 20px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+[data-theme="xp"] .brand-mark {
+  color: #ffffff;
+}
+[data-theme="xp"] .brand-subtitle {
+  color: #dae8ff;
+  text-shadow: none;
+}
+[data-theme="xp"] .watch-status {
+  color: #ffffff;
+  background: linear-gradient(to bottom, #006ef0, #0050bc);
+  border: 1px solid #3987f3;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.35);
+}
+[data-theme="xp"] .status-dot {
+  background: #3cce4d;
+  box-shadow: 0 0 6px #3cce4d;
+}
+[data-theme="xp"] .theme-picker {
+  background: #d1e4f7;
+  color: #10285b;
+  border-color: #6ca2e7;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+[data-theme="xp"] .theme-button[aria-pressed="true"] {
+  background: linear-gradient(to bottom, #4ee35f 0%, #3cce4d 50%, #1f9a2e 100%);
+  border-color: #079317;
+  color: #ffffff;
+  box-shadow: inset 0 1px #a4fca4, 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+}
+[data-theme="xp"] .tab-strip {
+  background: linear-gradient(to bottom, #5ba9ff, #69b5ff);
+  padding: 9px 15px 0;
+  gap: 3px;
+}
+[data-theme="xp"] .app-tab {
+  border-radius: 6px 6px 0 0;
+  border: 1px solid #4a8cd4;
+  border-bottom: 0;
+}
+[data-theme="xp"] .app-tab[aria-selected="true"] {
+  border-top: 3px solid #f6a623;
+  background: linear-gradient(to bottom, #ffffff, #ece9d8);
+  color: #0c2758;
+}
+[data-theme="xp"] .app-window {
+  border-radius: 0;
+  border: 1px solid #7f9db9;
+  box-shadow: none;
+}
+[data-theme="xp"] .address-bar {
+  background: linear-gradient(to bottom, #f3f0e5, #ece9d8);
+  border-color: #d0cabb;
+}
+[data-theme="xp"] .address-field {
+  border-color: #7f9db9;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+[data-theme="xp"] .app-footer {
+  margin: 0;
+  border-radius: 0;
+  background: linear-gradient(to bottom, #2a6ee8 0%, #1754c7 100%);
+  color: #ffffff;
+  border-color: #1044ab;
+}
+[data-theme="xp"] .app-footer .blink-counter,
+[data-theme="xp"] .app-footer .footer-note {
+  color: #d6e5ff;
+  border-color: #3b74e6;
+}
+[data-theme="xp"] .button-primary {
+  background: linear-gradient(to bottom, #4da4ff 0%, #1e7bf6 50%, #0053cf 100%);
+  border-color: #003d99;
+  color: #ffffff;
+  box-shadow: inset 0 1px #b3d9ff, 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+[data-theme="xp"] .button-primary:hover {
+  background: linear-gradient(to bottom, #5cb0ff 0%, #2885ff 50%, #005fec 100%);
+}
+[data-theme="xp"] .panic-button {
+  background: linear-gradient(to bottom, #ffa756 0%, #ea580c 50%, #c2410c 100%);
+  border-color: #9a3412;
+  color: #ffffff;
+  box-shadow: inset 0 1px #ffedd5, 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+[data-theme="xp"] .panic-button:hover {
+  background: linear-gradient(to bottom, #ffb36b 0%, #f97316 50%, #ea580c 100%);
+}
+[data-theme="xp"] .work-view {
+  border: 3px solid #0869ea;
+  border-radius: 8px 8px 0 0;
+}
+[data-theme="xp"] .document-header {
+  background: linear-gradient(to bottom, #2389ff 0%, #0869ea 50%, #0555dd 100%);
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.35);
+}
+[data-theme="xp"] .save-status,
+[data-theme="xp"] .document-period {
+  color: #edf5ff;
+  text-shadow: none;
+}
+[data-theme="xp"] .document-close {
+  color: #ffffff;
+  background: linear-gradient(to bottom, #ee8b7b, #d63f27);
+  border: 1px solid #ffffff;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+[data-theme="xp"] .document-close:hover:enabled {
+  background: linear-gradient(to bottom, #f89787, #e54b33);
+}
+
+/* ========================================================
+   THAI GOV 1.0 (ระบบจัดซื้อจัดจ้างภาครัฐ e-GP 1.0 / สารบรรณไทย) REFINEMENTS
+   ======================================================== */
+[data-theme="gov"] {
+  font-family: 'TH Sarabun New', 'Angsana New', 'Sarabun', 'TH SarabunPSK', serif;
+}
+
+[data-theme="gov"] body,
+[data-theme="gov"] button,
+[data-theme="gov"] input,
+[data-theme="gov"] textarea,
+[data-theme="gov"] select,
+[data-theme="gov"] table {
+  font-family: 'TH Sarabun New', 'Angsana New', 'Sarabun', 'TH SarabunPSK', serif;
+}
+
+[data-theme="gov"] body {
+  background-color: #ece5d8;
+  background-image:
+    radial-gradient(#c59b2728 1.5px, transparent 1.5px),
+    linear-gradient(#0b254508 1px, transparent 1px),
+    linear-gradient(90deg, #0b254508 1px, transparent 1px);
+  background-size: 28px 28px, 14px 14px, 14px 14px;
+  color: #0b2545;
+}
+
+/* Shell casing with vintage woodgrain outer edge and gold double border */
+[data-theme="gov"] .leisure-shell {
+  border: 4px double #c59b27;
+  outline: 3px solid #54381e;
+  box-shadow: 0 0 0 5px #c59b27, 0 10px 30px rgba(11, 37, 69, 0.35);
+  border-radius: 0;
+  background: #fdfbf7;
+}
+
+[data-theme="gov"] .app-header {
+  background: linear-gradient(180deg, #0b2545 0%, #10325c 50%, #0b2545 100%);
+  color: #fdfbf7;
+  border-bottom: 4px double #c59b27;
+  box-shadow: inset 0 -1px 0 #54381e, 0 3px 8px rgba(11, 37, 69, 0.25);
+  padding: 14px 18px;
+}
+
+[data-theme="gov"] .brand h1 {
+  color: #fdfbf7;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="gov"] .brand-subtitle {
+  color: #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+[data-theme="gov"] .brand svg {
+  filter: drop-shadow(0 1px 2px #c59b27);
+}
+
+[data-theme="gov"] .watch-status {
+  background: #07192d;
+  color: #fdfbf7;
+  border: 1px solid #c59b27;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+}
+
+[data-theme="gov"] .status-dot {
+  background: #c59b27;
+  box-shadow: 0 0 6px #c59b27;
+}
+
+[data-theme="gov"] .theme-picker {
+  background: #07192d;
+  border: 1px solid #c59b27;
+  color: #fdfbf7;
+}
+
+[data-theme="gov"] .theme-button {
+  color: #eadeca;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 14px;
+}
+
+[data-theme="gov"] .theme-button[aria-pressed="true"] {
+  background: #c59b27;
+  color: #0b2545;
+  font-weight: bold;
+  border-color: #c59b27;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+/* Tabs & ribbon with traditional bureaucratic parchment styling */
+[data-theme="gov"] .tab-strip {
+  background: linear-gradient(180deg, #ede4d3 0%, #ded2bc 100%);
+  border-bottom: 3px double #c59b27;
+  padding: 8px 16px 0;
+  gap: 6px;
+}
+
+[data-theme="gov"] .app-tab {
+  background: #e4d8c2;
+  color: #0b2545;
+  border: 1px solid #c59b27;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 8px 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: background 0.15s, color 0.15s;
+}
+
+[data-theme="gov"] .app-tab:hover:not([aria-selected="true"]) {
+  background: #eddcb9;
+}
+
+[data-theme="gov"] .app-tab[aria-selected="true"] {
+  background: #0b2545;
+  color: #fdfbf7;
+  border-color: #c59b27;
+  border-top: 3px solid #c59b27;
+  box-shadow: 0 -2px 6px rgba(11, 37, 69, 0.2);
+}
+
+[data-theme="gov"] .app-tab[aria-selected="true"] svg {
+  color: #c59b27;
+}
+
+[data-theme="gov"] .address-bar {
+  background: #f7f1e6;
+  border-bottom: 2px solid #c59b27;
+}
+
+[data-theme="gov"] .address-field {
+  border: 2px double #c59b27;
+  background: #ffffff;
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="gov"] .address-text {
+  font-weight: bold;
+  color: #0b2545;
+}
+
+[data-theme="gov"] .address-caption {
+  color: #6d5418;
+  font-style: italic;
+}
+
+[data-theme="gov"] .app-window {
+  border: 3px double #c59b27;
+  border-radius: 0;
+  background: #fdfbf7;
+  box-shadow: 0 4px 16px rgba(11, 37, 69, 0.15);
+  position: relative;
+}
+
+[data-theme="gov"] .settings-drawer {
+  background: #fbf8f1;
+  border: 3px double #c59b27;
+  color: #0b2545;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="gov"] .settings-heading {
+  border-bottom: 2px solid #c59b27;
+}
+
+[data-theme="gov"] .settings-heading h2 {
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+[data-theme="gov"] .button {
+  border: 1px solid #c59b27;
+  background: linear-gradient(180deg, #fdfbf7 0%, #ece2ce 100%);
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-weight: bold;
+  font-size: 15px;
+  border-radius: 2px;
+  box-shadow: var(--button-shadow);
+}
+
+[data-theme="gov"] .button:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f2e8d7 100%);
+}
+
+[data-theme="gov"] .button:active {
+  background: #ded1ba;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="gov"] .button-primary {
+  background: linear-gradient(180deg, #0b2545 0%, #153966 100%);
+  color: #fdfbf7;
+  border: 1px solid #c59b27;
+  box-shadow: inset 0 1px 0 rgba(197, 155, 39, 0.5), 0 2px 4px rgba(11, 37, 69, 0.25);
+}
+
+[data-theme="gov"] .button-primary:hover {
+  background: linear-gradient(180deg, #10325c 0%, #1c4980 100%);
+}
+
+[data-theme="gov"] .panic-button {
+  background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+  border: 2px double #c59b27;
+  color: #ffffff;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="gov"] .panic-button:hover {
+  background: linear-gradient(180deg, #b91c1c 0%, #991b1b 100%);
+}
+
+[data-theme="gov"] .panic-button kbd {
+  background: #5b1313;
+  color: #c59b27;
+  border-color: #c59b27;
+}
+
+/* Official Thai Government Red Ink Stamp: เอกสารด่วนที่สุด / ลับเฉพาะ */
+[data-theme="gov"] .work-view::before,
+[data-theme="gov"] .app-window::after {
+  content: "เอกสารด่วนที่สุด / ลับเฉพาะ";
+  position: absolute;
+  top: 60px;
+  right: 24px;
+  z-index: 120;
+  display: inline-block;
+  padding: 4px 14px;
+  color: #cc181e;
+  border: 3px double #cc181e;
+  outline: 1px solid #cc181e;
+  outline-offset: 2px;
+  border-radius: 3px;
+  background: rgba(253, 251, 247, 0.92);
+  font-family: 'TH Sarabun New', 'Angsana New', 'Sarabun', serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-shadow: 0 0 1px rgba(204, 24, 30, 0.45);
+  box-shadow: 0 0 0 1px rgba(204, 24, 30, 0.35), inset 0 0 5px rgba(204, 24, 30, 0.15), 2px 2px 8px rgba(0, 0, 0, 0.18);
+  transform: rotate(-7deg);
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  [data-theme="gov"] .work-view::before,
+  [data-theme="gov"] .app-window::after {
+    top: 48px;
+    right: 12px;
+    font-size: 13px;
+    padding: 3px 8px;
+    transform: rotate(-5deg);
+  }
+}
+
+/* Bottom Marquee Bar / Banner: e-GP 1.0 */
+[data-theme="gov"] .app-footer {
+  background: #0b2545;
+  color: #fdfbf7;
+  border: 3px double #c59b27;
+  border-radius: 0;
+  margin: 0;
+  padding: 10px 18px 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="gov"] .app-footer .work-progress,
+[data-theme="gov"] .app-footer .blink-counter {
+  color: #eadeca;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+}
+
+[data-theme="gov"] .app-footer .empty-progress {
+  background: #14355c;
+  border: 1px solid #c59b27;
+}
+
+[data-theme="gov"] .app-footer .footer-note {
+  color: #c59b27;
+  border-left-color: #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+}
+
+[data-theme="gov"] .app-footer::after {
+  content: "★ ระบบสารบรรณและจัดซื้อจัดจ้างอิเล็กทรอนิกส์ (e-GP 1.0) · ซื่อสัตย์ สุจริต โปร่งใส ตรวจสอบได้ ★ ระบบสารบรรณและจัดซื้อจัดจ้างอิเล็กทรอนิกส์ (e-GP 1.0) · ซื่อสัตย์ สุจริต โปร่งใส ตรวจสอบได้ ★";
+  display: block;
+  flex: 0 0 100%;
+  width: calc(100% + 36px);
+  margin: 8px -18px 0;
+  padding: 5px 0;
+  background: #07192d;
+  color: #c59b27;
+  border-top: 1px solid #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', 'Sarabun', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  animation: gov-marquee 25s linear infinite;
+}
+
+@keyframes gov-marquee {
+  0% { text-indent: 60%; }
+  100% { text-indent: -60%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="gov"] .app-footer::after {
+    animation: none;
+    text-indent: 0;
+  }
+}
+
+/* Work View / Electronic Document (e-GP 1.0 Spreadsheet Mode) */
+[data-theme="gov"] .work-view {
+  border: 4px double #c59b27;
+  box-shadow: inset 0 0 0 2px #54381e, 0 0 0 4px #c59b27;
+  background: #fdfbf7;
+  position: fixed;
+}
+
+[data-theme="gov"] .document-header {
+  background: linear-gradient(180deg, #0b2545 0%, #10325c 100%);
+  color: #fdfbf7;
+  border-bottom: 3px double #c59b27;
+  padding-block: 8px;
+}
+
+[data-theme="gov"] .document-header h1 {
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fdfbf7;
+}
+
+[data-theme="gov"] .document-icon {
+  background: #c59b27;
+  color: #0b2545;
+  border: 1px solid #0b2545;
+  font-weight: bold;
+}
+
+[data-theme="gov"] .save-status,
+[data-theme="gov"] .document-period {
+  color: #eadeca;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+}
+
+[data-theme="gov"] .document-close {
+  background: #c59b27;
+  color: #0b2545;
+  border: 1px solid #0b2545;
+  box-shadow: inset 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="gov"] .document-close:hover:not(:disabled) {
+  background: #deb53e;
+}
+
+[data-theme="gov"] .document-menu {
+  background: #f5eee0;
+  border-bottom: 1px solid #c59b27;
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+[data-theme="gov"] .document-menu .current-menu {
+  background: #0b2545;
+  color: #fdfbf7;
+}
+
+[data-theme="gov"] .document-ribbon {
+  background: #fbf7ee;
+  border-bottom: 2px double #c59b27;
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+}
+
+[data-theme="gov"] .formula-bar {
+  background: #f5eee0;
+  border-bottom: 1px solid #c59b27;
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+}
+
+[data-theme="gov"] .formula-value {
+  background: #ffffff;
+  border: 1px solid #c59b27;
+  color: #0b2545;
+}
+
+[data-theme="gov"] .work-sheet {
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 16px;
+  background: #fdfbf7;
+}
+
+[data-theme="gov"] .work-sheet th {
+  background: #eadeca;
+  color: #0b2545;
+  border: 1px solid #c59b27;
+  font-weight: bold;
+}
+
+[data-theme="gov"] .work-sheet th.row-number {
+  background: #ede4d3;
+  color: #0b2545;
+  border: 1px solid #c59b27;
+}
+
+[data-theme="gov"] .work-sheet td {
+  border: 1px solid #d8cebc;
+  color: #0b2545;
+  background: #fdfbf7;
+}
+
+[data-theme="gov"] .work-sheet .data-heading {
+  background: #eadeca;
+  color: #0b2545;
+  font-weight: 700;
+}
+
+[data-theme="gov"] .work-sheet .selected-cell {
+  outline: 2px solid #c59b27;
+  background: #fff8e0;
+}
+
+[data-theme="gov"] .work-sheet .selected-column {
+  background: #dfd2bb;
+}
+
+[data-theme="gov"] .document-sheet-tabs {
+  background: #ede4d3;
+  border-top: 2px solid #c59b27;
+}
+
+[data-theme="gov"] .document-sheet-tab {
+  background: #dfd4bf;
+  color: #0b2545;
+  border: 1px solid #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+}
+
+[data-theme="gov"] .document-sheet-tab.selected-sheet {
+  background: #0b2545;
+  color: #fdfbf7;
+  border-bottom-color: #0b2545;
+  font-weight: bold;
+}
+
+[data-theme="gov"] .document-footer {
+  background: #0b2545;
+  color: #fdfbf7;
+  border-top: 2px solid #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 14px;
+}
+
+/* Feature specific adjustments */
+[data-theme="gov"] .yt-heading h1 {
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+}
+
+[data-theme="gov"] .yt-stamp {
+  background: #fdf5e2;
+  color: #8f6f1c;
+  border: 2px double #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+}
+
+[data-theme="gov"] .chat-log {
+  border: 2px double #c59b27;
+  background: #faf5ea;
+}
+
+[data-theme="gov"] .bubble-ai {
+  background: #0b2545;
+  color: #fdfbf7;
+  border: 1px solid #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+}
+
+[data-theme="gov"] .bubble-user {
+  background: #eadeca;
+  color: #0b2545;
+  border: 1px solid #c59b27;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 15px;
+}
+
+[data-theme="gov"] .player-card {
+  border: 3px double #c59b27;
+  background: #fdfbf7;
+}
+
+[data-theme="gov"] .now-playing-title {
+  color: #0b2545;
+  font-family: 'TH Sarabun New', 'Angsana New', serif;
+  font-size: 18px;
+}
+
+/* ========================================================
+   THEME 5: ICU MEDICAL MONITOR AESTHETIC & TELEMETRY
+   ======================================================== */
+
+[data-theme="icu"],
+[data-theme="icu"] * {
+  font-family: Consolas, "Courier New", monospace;
+}
+
+[data-theme="icu"] body {
+  background-color: #05080c;
+  background-image:
+    linear-gradient(rgba(0, 230, 118, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 230, 118, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(0, 230, 118, 0.03) 0%, transparent 85%);
+  background-size: 24px 24px, 24px 24px, 100% 100%;
+  color: #00e676;
+  text-shadow: 0 0 3px rgba(0, 230, 118, 0.45);
+}
+
+/* Subtle CRT/LCD monitor scanlines */
+[data-theme="icu"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.18) 0px,
+    rgba(0, 0, 0, 0.18) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 999;
+}
+
+/* Window & Chassis frame */
+[data-theme="icu"] .leisure-shell {
+  border: 1px solid #00e67655;
+  border-radius: 6px;
+  box-shadow: 0 0 30px rgba(0, 230, 118, 0.12), inset 0 0 20px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  background: #05080c;
+}
+
+[data-theme="icu"] .app-header {
+  background: linear-gradient(180deg, #09131c 0%, #060b10 100%);
+  border-bottom: 2px solid #00e67655;
+  padding: 14px 20px;
+}
+
+[data-theme="icu"] .brand {
+  gap: 14px;
+}
+
+[data-theme="icu"] .brand-mark {
+  color: #00e676;
+  filter: drop-shadow(0 0 6px rgba(0, 230, 118, 0.6));
+}
+
+[data-theme="icu"] .brand h1 {
+  color: #00e676;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(0, 230, 118, 0.7);
+}
+
+[data-theme="icu"] .brand-subtitle {
+  color: #00e5ff;
+  letter-spacing: 2.2px;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+}
+
+[data-theme="icu"] .brand-subtitle::after {
+  content: " [ICU PATIENT MONITOR · LEAD II]";
+  color: #ffab00;
+  text-shadow: 0 0 6px rgba(255, 171, 0, 0.5);
+}
+
+/* Watch Status & Heart Rate Counter Readout */
+[data-theme="icu"] .watch-status {
+  background: #030d07;
+  border: 1px solid #00e676;
+  border-radius: 4px;
+  color: #00e676;
+  box-shadow: 0 0 14px rgba(0, 230, 118, 0.25), inset 0 0 8px rgba(0, 230, 118, 0.15);
+  font-size: 12px;
+  padding: 8px 14px;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="icu"] .status-dot {
+  background: #00e676;
+  box-shadow: 0 0 8px #00e676, 0 0 16px #00e676;
+  animation: icu-heartbeat 0.85s ease-in-out infinite;
+}
+
+[data-theme="icu"] .watch-status::after {
+  content: " · HR: 78 bpm · SpO2: 99% · ST: Normal";
+  color: #00e5ff;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.6);
+}
+
+/* Theme picker */
+[data-theme="icu"] .theme-picker {
+  background: #060e15;
+  border: 1px solid #00e67644;
+}
+
+[data-theme="icu"] .theme-button {
+  color: #00e676aa;
+  border-radius: 2px;
+}
+
+[data-theme="icu"] .theme-button:hover {
+  color: #00e676;
+  background: #00e67618;
+}
+
+[data-theme="icu"] .theme-button[aria-pressed="true"] {
+  background: #00e676;
+  color: #05080c;
+  font-weight: 750;
+  box-shadow: 0 0 12px rgba(0, 230, 118, 0.6);
+  border-color: #00e676;
+}
+
+[data-theme="icu"] .theme-button[aria-pressed="true"] .icon {
+  opacity: 1;
+  color: #05080c;
+}
+
+/* Panic button: Emergency Alert / Defibrillator Trigger */
+[data-theme="icu"] .panic-button {
+  background: linear-gradient(180deg, #d50000 0%, #8a0000 100%);
+  border: 1px solid #ff1744;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(255, 23, 68, 0.45);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  animation: icu-alert-pulse 2s ease-in-out infinite;
+}
+
+[data-theme="icu"] .panic-button:hover,
+[data-theme="icu"] .panic-button:active {
+  background: #ff1744;
+  box-shadow: 0 0 28px rgba(255, 23, 68, 0.85);
+}
+
+[data-theme="icu"] .panic-button kbd {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* App Window & Tab Strip */
+[data-theme="icu"] .app-window {
+  border: 1px solid #00e67644;
+  border-radius: 0;
+  background: #070d14;
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.1);
+}
+
+[data-theme="icu"] .tab-strip {
+  background: #04080d;
+  border-bottom: 2px solid #00e67655;
+  padding: 0;
+  gap: 1px;
+}
+
+[data-theme="icu"] .app-tab {
+  background: #060c12;
+  color: #00e67688;
+  border: 1px solid #00e67622;
+  border-bottom: none;
+  border-radius: 0;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  transition: all 0.15s ease;
+}
+
+[data-theme="icu"] .app-tab:hover {
+  color: #00e676;
+  background: #00e67610;
+}
+
+[data-theme="icu"] .app-tab[aria-selected="true"] {
+  background: #091a13;
+  color: #00e676;
+  border-top: 3px solid #00e676;
+  border-color: #00e67666 #00e67666 transparent;
+  box-shadow: inset 0 0 14px rgba(0, 230, 118, 0.2);
+  text-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
+}
+
+/* ECG Heart Rate Wave Styling (SVG / Animated Pulse Line Banner) */
+[data-theme="icu"] .tab-strip::after {
+  content: "";
+  grid-column: 1 / -1;
+  height: 26px;
+  background-color: #03060a;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60'%3E%3Cpath d='M0 30 L80 30 Q90 30 95 24 Q100 30 110 30 L130 30 L140 10 L150 55 L160 5 L170 45 L175 30 L200 30 Q215 18 230 30 L400 30' fill='none' stroke='%2300e676' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 320px 26px;
+  border-top: 1px solid #00e67622;
+  border-bottom: 1px solid #00e67644;
+  animation: icu-ecg-sweep 3s linear infinite;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+/* Address Bar Telemetry */
+[data-theme="icu"] .address-bar {
+  background: #060b10;
+  border-bottom: 1px solid #00e67633;
+  color: #00e5ff;
+}
+
+[data-theme="icu"] .address-field {
+  background: #03060a;
+  border: 1px solid #00e67644;
+  border-radius: 3px;
+  color: #00e676;
+  box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.1);
+}
+
+[data-theme="icu"] .address-text {
+  color: #00e5ff;
+}
+
+[data-theme="icu"] .address-caption {
+  color: #ffab00;
+  font-weight: 700;
+}
+
+[data-theme="icu"] .address-caption::before {
+  content: "ECG LEAD II · ";
+  color: #00e676;
+}
+
+[data-theme="icu"] .address-caption::after {
+  content: " · [78 BPM]";
+  color: #00e676;
+}
+
+/* Buttons, Inputs, Fields */
+[data-theme="icu"] .button {
+  background: #071017;
+  border: 1px solid #00e67655;
+  color: #00e676;
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.15);
+}
+
+[data-theme="icu"] .button:hover {
+  background: #00e676;
+  color: #05080c;
+  box-shadow: 0 0 16px rgba(0, 230, 118, 0.6);
+  border-color: #00e676;
+}
+
+[data-theme="icu"] .button-primary {
+  background: #00e676;
+  color: #05080c;
+  border-color: #00e676;
+  font-weight: 750;
+  box-shadow: 0 0 16px rgba(0, 230, 118, 0.5);
+}
+
+[data-theme="icu"] .button-primary:hover {
+  background: #26ff98;
+  box-shadow: 0 0 24px rgba(0, 230, 118, 0.8);
+}
+
+[data-theme="icu"] .field,
+[data-theme="icu"] input,
+[data-theme="icu"] textarea,
+[data-theme="icu"] select {
+  background: #04080e;
+  border: 1px solid #00e67655;
+  color: #00e676;
+  border-radius: 3px;
+}
+
+[data-theme="icu"] .field::placeholder,
+[data-theme="icu"] input::placeholder {
+  color: #00e67655;
+}
+
+[data-theme="icu"] :focus-visible {
+  outline: 2px solid #00e676;
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(0, 230, 118, 0.6);
+}
+
+[data-theme="icu"] .panel {
+  background: #071017;
+  border: 1px solid #00e67633;
+  border-radius: 4px;
+}
+
+/* Settings Drawer */
+[data-theme="icu"] .settings-drawer {
+  background: #060c12;
+  border-bottom: 2px solid #00e67655;
+}
+
+/* App Footer with ECG Line and Vitals Telemetry */
+[data-theme="icu"] .app-footer {
+  background: #060b10;
+  border: 1px solid #00e67644;
+  border-radius: 0;
+  color: #00e676;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+[data-theme="icu"] .app-footer::before {
+  content: "VITALS: HR: 78 bpm · SpO2: 99% · ST: Normal · NIBP: 120/80 (93) · RESP: 18 rpm · TEMP: 37.0°C";
+  color: #00e5ff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  background: #03080e;
+  border: 1px solid #00e5ff44;
+  border-radius: 2px;
+  text-shadow: 0 0 5px rgba(0, 229, 255, 0.6);
+}
+
+/* Footer ECG waveform indicator */
+[data-theme="icu"] .empty-progress {
+  height: 18px;
+  width: 140px;
+  background-color: #03070c;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40'%3E%3Cpath d='M0 20 L40 20 L48 10 L54 32 L60 4 L66 28 L72 20 L90 20 Q100 12 110 20 L200 20' fill='none' stroke='%2300e676' stroke-width='2'/%3E%3C/svg%3E");
+  background-size: 160px 18px;
+  background-repeat: repeat-x;
+  border: 1px solid #00e67666;
+  border-radius: 2px;
+  animation: icu-ecg-sweep 2.2s linear infinite;
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.3);
+}
+
+[data-theme="icu"] .blink-counter {
+  color: #ffab00;
+  font-weight: 700;
+}
+
+[data-theme="icu"] .footer-note {
+  color: #ffab00;
+  border-left-color: #00e67633;
+}
+
+/* Feature Details: YouTube, AI, Music */
+[data-theme="icu"] .yt-screen {
+  background: #020406;
+  border: 2px solid #00e67644;
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.15);
+}
+
+[data-theme="icu"] .yt-pill {
+  background: #070e16;
+  border: 1px solid #00e67633;
+  color: #00e676;
+}
+
+[data-theme="icu"] .yt-pill.active {
+  background: #00e676;
+  color: #05080c;
+  font-weight: 750;
+  box-shadow: 0 0 12px rgba(0, 230, 118, 0.5);
+}
+
+[data-theme="icu"] .yt-status {
+  background: #060d14;
+  border-left: 3px solid #00e676;
+  color: #00e676;
+}
+
+[data-theme="icu"] .chat-log {
+  background: #04080e;
+  border-color: #00e67633;
+}
+
+[data-theme="icu"] .chat-line {
+  background: #071018;
+  border: 1px solid #00e5ff33;
+  color: #00e5ff;
+}
+
+[data-theme="icu"] .chat-line-user {
+  background: #081710;
+  border: 1px solid #00e67655;
+  color: #00e676;
+}
+
+[data-theme="icu"] .silent-badge {
+  background: #08121a;
+  border-color: #00e5ff44;
+  color: #00e5ff;
+}
+
+[data-theme="icu"] .album-cover {
+  background: #040d08;
+  border: 2px solid #00e676;
+  color: #00e676;
+  box-shadow: 0 0 25px rgba(0, 230, 118, 0.25);
+}
+
+[data-theme="icu"] .album-period {
+  color: #00e5ff;
+}
+
+[data-theme="icu"] .track-button {
+  background: #060d14;
+  border-color: #00e67633;
+  color: #00e676;
+}
+
+[data-theme="icu"] .track-button[aria-pressed="true"] {
+  background: #081a12;
+  border-color: #00e676;
+  box-shadow: inset 3px 0 0 #00e676, 0 0 12px rgba(0, 230, 118, 0.2);
+}
+
+[data-theme="icu"] .volume-readout {
+  color: #00e5ff;
+}
+
+/* ========================================================
+   FLATLINE & PAUSED / PANIC ALERT STATES
+   ======================================================== */
+
+/* 1. PAUSED STATE: Anti-FOMO Blink / Attention Lock Overlay */
+[data-theme="icu"] .yt-blink-lock-overlay {
+  background: rgba(5, 8, 12, 0.94) !important;
+  backdrop-filter: blur(8px);
+}
+
+[data-theme="icu"] .yt-blink-card {
+  background: #090305;
+  border: 2px solid #ff1744;
+  color: #ff5252;
+  box-shadow: 0 0 40px rgba(255, 23, 68, 0.5), inset 0 0 20px rgba(255, 23, 68, 0.2);
+  border-radius: 4px;
+}
+
+/* Flatline alert banner atop the paused card */
+[data-theme="icu"] .yt-blink-card::before {
+  content: "── FLATLINE ALERT · ASYSTOLE · HR: 0 BPM · CODE BLUE ──";
+  display: block;
+  color: #ffffff;
+  background: #d50000;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  padding: 6px;
+  border-radius: 2px;
+  margin-bottom: 14px;
+  text-shadow: 0 0 8px #ffffff;
+  animation: icu-flatline-flash 1s steps(2) infinite;
+}
+
+/* Flatline horizontal red line indicator */
+[data-theme="icu"] .yt-blink-card::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: #ff1744;
+  box-shadow: 0 0 10px #ff1744, 0 0 20px #ff1744;
+  margin-top: 14px;
+}
+
+[data-theme="icu"] .yt-blink-card h3 {
+  color: #ff1744;
+  text-shadow: 0 0 10px rgba(255, 23, 68, 0.7);
+}
+
+[data-theme="icu"] .yt-blink-card .yt-resume-btn {
+  background: #ffab00;
+  border-color: #ffab00;
+  color: #05080c;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 0 20px rgba(255, 171, 0, 0.6);
+}
+
+[data-theme="icu"] .yt-blink-card .yt-resume-btn:hover {
+  background: #ffd54f;
+  box-shadow: 0 0 30px rgba(255, 171, 0, 0.9);
+}
+
+/* 2. PANIC TRIGGERED STATE: Emergency Work / Flatline Mode */
+[data-theme="icu"] body.working {
+  background-color: #0c0204;
+  background-image:
+    linear-gradient(rgba(255, 23, 68, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 23, 68, 0.08) 1px, transparent 1px);
+}
+
+[data-theme="icu"] body.working .work-view,
+[data-theme="icu"] .work-view {
+  background: #080305;
+  color: #ff5252;
+  border: 2px solid #ff1744;
+  box-shadow: 0 0 45px rgba(255, 23, 68, 0.4), inset 0 0 30px rgba(255, 23, 68, 0.15);
+}
+
+[data-theme="icu"] body.working .document-header {
+  background: linear-gradient(90deg, #600 0%, #b00 50%, #600 100%);
+  color: #ffffff;
+  border-bottom: 2px solid #ff1744;
+  box-shadow: 0 0 20px rgba(255, 23, 68, 0.6);
+  animation: icu-strobe 1.2s steps(2) infinite;
+}
+
+[data-theme="icu"] body.working .document-header h1 {
+  color: #ffffff;
+  text-shadow: 0 0 8px #ffffff;
+}
+
+[data-theme="icu"] body.working .save-status {
+  color: #ffff00;
+  font-weight: 800;
+}
+
+[data-theme="icu"] body.working .save-status::after {
+  content: " ⚠️ FLATLINE DETECTED · HR: 0 BPM · ASYSTOLE";
+  color: #ffff00;
+  letter-spacing: 0.8px;
+  animation: icu-flatline-flash 0.8s steps(2) infinite;
+}
+
+[data-theme="icu"] body.working .document-icon {
+  background: #ff1744;
+  box-shadow: 0 0 10px #ff1744;
+}
+
+[data-theme="icu"] body.working .document-close {
+  background: #d50000;
+  color: #ffffff;
+  border: 1px solid #ff1744;
+}
+
+[data-theme="icu"] body.working .document-close:hover:enabled {
+  background: #ff1744;
+  box-shadow: 0 0 15px #ff1744;
+}
+
+/* Flatline ECG pulse line across the formula bar & document ribbon */
+[data-theme="icu"] body.working .formula-bar {
+  background: #090305;
+  border-bottom: 2px solid #ff1744;
+  position: relative;
+}
+
+[data-theme="icu"] body.working .formula-bar::before {
+  content: "ECG MONITOR: ────────────────────────────────────── [FLATLINE / 0 BPM]";
+  display: block;
+  width: 100%;
+  color: #ff1744;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+  text-shadow: 0 0 6px #ff1744;
+}
+
+[data-theme="icu"] body.working .work-sheet {
+  background: #080305;
+  color: #ff8a80;
+}
+
+[data-theme="icu"] body.working .work-sheet th,
+[data-theme="icu"] body.working .work-sheet td {
+  border-color: #3b0a0e;
+}
+
+[data-theme="icu"] body.working .work-sheet thead th,
+[data-theme="icu"] body.working .work-sheet th.row-number {
+  background: #150508;
+  color: #ff5252;
+}
+
+[data-theme="icu"] body.working .work-sheet .data-heading {
+  background: #25090e;
+  color: #ff8a80;
+}
+
+[data-theme="icu"] body.working .work-sheet .selected-cell {
+  outline-color: #ff1744;
+  background: #2b0b11;
+  color: #ffffff;
+}
+
+[data-theme="icu"] body.working .work-chart {
+  background: #090305;
+  border-color: #ff1744;
+  box-shadow: 0 0 20px rgba(255, 23, 68, 0.3);
+}
+
+[data-theme="icu"] body.working .work-chart text {
+  fill: #ff5252;
+}
+
+[data-theme="icu"] body.working .work-chart rect {
+  fill: #ff1744 !important;
+}
+
+/* Return Dialog */
+[data-theme="icu"] .return-dialog {
+  background: #081018;
+  border: 2px solid #ffab00;
+  color: #ffab00;
+  box-shadow: 0 0 35px rgba(255, 171, 0, 0.35);
+}
+
+[data-theme="icu"] .return-dialog::backdrop {
+  background: rgba(5, 8, 12, 0.85);
+}
+
+/* ========================================================
+   KEYFRAME ANIMATIONS FOR ICU TELEMETRY
+   ======================================================== */
+
+@keyframes icu-ecg-sweep {
+  0% { background-position-x: 0; }
+  100% { background-position-x: -320px; }
+}
+
+@keyframes icu-heartbeat {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  15% { transform: scale(1.6); opacity: 1; box-shadow: 0 0 16px #00e676; }
+  30% { transform: scale(1.1); opacity: 0.85; }
+  45% { transform: scale(1.4); opacity: 1; }
+  60% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes icu-alert-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 23, 68, 0.35); border-color: #ff1744; }
+  50% { box-shadow: 0 0 26px rgba(255, 23, 68, 0.8), 0 0 10px #ff1744; border-color: #ff5252; }
+}
+
+@keyframes icu-flatline-flash {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.35; }
+}
+
+@keyframes icu-strobe {
+  0%, 49% { filter: brightness(1); }
+  50%, 100% { filter: brightness(1.25); }
+}
+
+/* ========================================================
+   HI5 Y2K GLAM / DEK-D 2005 REFINEMENTS
+   ======================================================== */
+[data-theme="hi5"] body {
+  background-color: #120018;
+  background-image:
+    radial-gradient(#ff1493 1.5px, transparent 1.5px),
+    radial-gradient(#00ffff 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  background-position: 0 0, 14px 14px;
+}
+
+[data-theme="hi5"] .app-window,
+[data-theme="hi5"] .settings-drawer,
+[data-theme="hi5"] .panel,
+[data-theme="hi5"] .yt-screen {
+  border: 2px dotted #ff1493;
+  box-shadow: 0 0 20px rgba(255, 20, 147, 0.35), 0 0 35px rgba(0, 255, 255, 0.15);
+}
+
+[data-theme="hi5"] .brand h1,
+[data-theme="hi5"] .feature-heading h2,
+[data-theme="hi5"] .yt-heading h1 {
+  text-shadow: 0 0 8px #ff1493, 0 0 16px rgba(255, 20, 147, 0.8), 0 0 24px #00ffff;
+  color: #ffffff;
+}
+
+[data-theme="hi5"] .brand-mark {
+  color: #00ffff;
+  filter: drop-shadow(0 0 10px #00ffff) drop-shadow(0 0 15px #ff1493);
+}
+
+[data-theme="hi5"] .brand-subtitle::after {
+  content: " ♡ เหงาจัง... ทักได้ แฟนไม่อยู่ ♡";
+  color: #00ffff;
+  font-style: italic;
+  font-size: 11px;
+  margin-left: 8px;
+  text-shadow: 0 0 8px #00ffff, 0 0 14px #ff1493;
+  letter-spacing: normal;
+}
+
+[data-theme="hi5"] .footer-note::after {
+  content: " ✧*｡「เหงาจัง... ทักได้ แฟนไม่อยู่」｡*✧";
+  color: #00ffff;
+  margin-left: 8px;
+  text-shadow: 0 0 6px #00ffff;
+}
+
+[data-theme="hi5"] .watch-status {
+  background: #250230;
+  border: 2px dotted #00ffff;
+  color: #ffebf7;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.25);
+}
+
+[data-theme="hi5"] .status-dot {
+  background: #00ffff;
+  box-shadow: 0 0 10px #00ffff, 0 0 16px #00ffff;
+}
+
+[data-theme="hi5"] .address-bar {
+  background: #260233;
+  border-bottom: 2px dotted #ff1493;
+}
+
+[data-theme="hi5"] .address-field {
+  background: #15001e;
+  border: 2px dotted #00ffff;
+  color: #ffebf7;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.25);
+}
+
+[data-theme="hi5"] .address-text {
+  color: #00ffff;
+  text-shadow: 0 0 6px #00ffff;
+}
+
+[data-theme="hi5"] .address-caption {
+  color: #ff69b4;
+}
+
+[data-theme="hi5"] .theme-picker {
+  background: #23022d;
+  border: 2px dotted #ff1493;
+}
+
+[data-theme="hi5"] .button,
+[data-theme="hi5"] .app-tab,
+[data-theme="hi5"] .theme-button,
+[data-theme="hi5"] .camera-button,
+[data-theme="hi5"] .hud-button {
+  border: 2px dotted #ff1493;
+}
+
+[data-theme="hi5"] .button:hover,
+[data-theme="hi5"] .theme-button:hover,
+[data-theme="hi5"] .camera-button:hover,
+[data-theme="hi5"] .hud-button:hover {
+  border-color: #00ffff;
+  color: #00ffff;
+  box-shadow: 0 0 12px #00ffff, 0 0 6px #ff1493;
+}
+
+[data-theme="hi5"] .button-primary {
+  background: linear-gradient(135deg, #ff1493, #990055);
+  border: 2px dotted #00ffff;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 20, 147, 0.6);
+  text-shadow: 0 0 6px #000000;
+}
+
+[data-theme="hi5"] .button-primary:hover {
+  background: linear-gradient(135deg, #00ffff, #0088aa);
+  color: #000000;
+  border-color: #ff1493;
+  box-shadow: 0 0 16px #00ffff;
+  text-shadow: none;
+}
+
+[data-theme="hi5"] .panic-button {
+  background: linear-gradient(135deg, #ff0055, #88002a);
+  border: 2px dotted #00ffff;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(255, 0, 85, 0.7);
+  text-shadow: 0 0 6px #000000;
+}
+
+[data-theme="hi5"] .app-tab {
+  background: #20012b;
+  color: #ffebf7;
+  border-bottom: none;
+}
+
+[data-theme="hi5"] .app-tab[aria-selected="true"] {
+  background: linear-gradient(180deg, #ff1493, #7a0048);
+  border: 2px dotted #00ffff;
+  border-bottom: none;
+  color: #ffffff;
+  text-shadow: 0 0 8px #00ffff;
+  box-shadow: 0 -4px 15px rgba(255, 20, 147, 0.5);
+}
+
+[data-theme="hi5"] .theme-button[aria-pressed="true"] {
+  background: #ff1493;
+  border-color: #00ffff;
+  color: #ffffff;
+  box-shadow: 0 0 10px #00ffff;
+}
+
+[data-theme="hi5"] .chat-line {
+  border: 2px dotted #ff1493;
+  background: #280436;
+}
+
+[data-theme="hi5"] .chat-line-user {
+  border: 2px dotted #00ffff;
+  background: #180022;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+[data-theme="hi5"] .chat-line strong {
+  color: #00ffff;
+  text-shadow: 0 0 6px #00ffff;
+}
+
+[data-theme="hi5"] .chat-line-user strong {
+  color: #ff69b4;
+  text-shadow: 0 0 6px #ff69b4;
+}
+
+[data-theme="hi5"] .field,
+[data-theme="hi5"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
+[data-theme="hi5"] .settings-grid select,
+[data-theme="hi5"] textarea {
+  border: 2px dotted #ff1493;
+  background: #180022;
+  color: #ffebf7;
+}
+
+[data-theme="hi5"] .work-view {
+  background: #1d0326;
+  color: #ffebf7;
+  border: 3px dotted #ff1493;
+}
+
+[data-theme="hi5"] .document-header {
+  background: #2e043d;
+  color: #ffebf7;
+  border-bottom: 2px dotted #ff1493;
+}
+
+[data-theme="hi5"] .document-icon {
+  background: #ff1493;
+  color: #ffffff;
+  box-shadow: 0 0 10px #ff1493;
+}
+
+[data-theme="hi5"] .work-sheet {
+  background: #1d0326;
+  color: #ffebf7;
+}
+
+[data-theme="hi5"] .work-sheet td,
+[data-theme="hi5"] .work-sheet th {
+  border-color: #400a50;
+}
+
+[data-theme="hi5"] .work-sheet .data-heading {
+  background: #380447;
+  color: #00ffff;
+}
+
+[data-theme="hi5"] .work-sheet .selected-cell {
+  outline: 2px dotted #00ffff;
+  background: #440555;
+  color: #ffffff;
+}
+
+[data-theme="hi5"] .document-close {
+  background: #380447;
+  color: #ff1493;
+  border: 1px dotted #ff1493;
+}
+
+[data-theme="hi5"] .document-close:hover:enabled {
+  background: #ff1493;
+  color: #ffffff;
+}
+
+/* ========================================================
+   HACKER MATRIX 1999 REFINEMENTS
+   ======================================================== */
+[data-theme="matrix"] body {
+  background-color: #000000;
+  background-image:
+    linear-gradient(rgba(0, 255, 102, 0.03) 50%, rgba(0, 0, 0, 0.75) 50%),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 30, 10, 0.4) 2px, rgba(0, 30, 10, 0.4) 4px);
+  background-size: 100% 4px, 100% 4px;
+}
+
+[data-theme="matrix"] {
+  text-shadow: 0 0 3px rgba(0, 255, 102, 0.75), 0 0 8px rgba(0, 255, 102, 0.35);
+}
+
+[data-theme="matrix"] .app-window {
+  border: 2px solid #00ff66;
+  border-radius: 0;
+  box-shadow: 0 0 25px rgba(0, 255, 102, 0.3), inset 0 0 25px rgba(0, 30, 10, 0.6);
+  position: relative;
+}
+
+[data-theme="matrix"] .app-window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 102, 0.04) 2px, rgba(0, 255, 102, 0.04) 4px);
+  z-index: 50;
+}
+
+[data-theme="matrix"] .brand h1,
+[data-theme="matrix"] .feature-heading h2,
+[data-theme="matrix"] .yt-heading h1 {
+  color: #00ff66;
+  text-shadow: 0 0 8px #00ff66, 0 0 18px rgba(0, 255, 102, 0.8), 0 0 30px #003311;
+  letter-spacing: 1px;
+}
+
+[data-theme="matrix"] .brand-mark {
+  color: #00ff66;
+  filter: drop-shadow(0 0 10px #00ff66);
+}
+
+[data-theme="matrix"] .brand-subtitle::before {
+  content: "[WAKE_UP_NEO] > ";
+  color: #00ff66;
+  font-weight: bold;
+}
+
+[data-theme="matrix"] .address-field::before {
+  content: "neo@matrix:~$ ";
+  color: #00aa44;
+  font-weight: bold;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+[data-theme="matrix"] .chat-line strong::before {
+  content: "root@matrix:~$ ";
+  color: #00aa44;
+}
+
+[data-theme="matrix"] .chat-line-user strong::before {
+  content: "operator@zion:~$ ";
+  color: #00ff66;
+}
+
+[data-theme="matrix"] .footer-note::before {
+  content: "root@matrix:/dev/null# ";
+  color: #00aa44;
+}
+
+[data-theme="matrix"] .watch-status {
+  background: #030a05;
+  border: 1px solid #00ff66;
+  color: #00ff66;
+  border-radius: 0;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.25);
+}
+
+[data-theme="matrix"] .status-dot {
+  background: #00ff66;
+  box-shadow: 0 0 10px #00ff66, 0 0 18px #00ff66;
+}
+
+[data-theme="matrix"] .theme-picker {
+  background: #030805;
+  border: 1px solid #003311;
+  border-radius: 0;
+}
+
+[data-theme="matrix"] .button,
+[data-theme="matrix"] .app-tab,
+[data-theme="matrix"] .theme-button,
+[data-theme="matrix"] .camera-button,
+[data-theme="matrix"] .hud-button,
+[data-theme="matrix"] .panic-button,
+[data-theme="matrix"] .panel,
+[data-theme="matrix"] .settings-drawer,
+[data-theme="matrix"] .app-footer,
+[data-theme="matrix"] .address-bar,
+[data-theme="matrix"] .address-field,
+[data-theme="matrix"] .field,
+[data-theme="matrix"] textarea,
+[data-theme="matrix"] select,
+[data-theme="matrix"] input {
+  border-radius: 0;
+}
+
+[data-theme="matrix"] .button,
+[data-theme="matrix"] .theme-button,
+[data-theme="matrix"] .camera-button,
+[data-theme="matrix"] .hud-button {
+  background: #050d08;
+  color: #00ff66;
+  border: 1px solid #003311;
+  box-shadow: inset 0 0 8px rgba(0, 255, 102, 0.15);
+}
+
+[data-theme="matrix"] .button:hover,
+[data-theme="matrix"] .theme-button:hover,
+[data-theme="matrix"] .camera-button:hover,
+[data-theme="matrix"] .hud-button:hover {
+  background: #00ff66;
+  color: #000000;
+  border-color: #00ff66;
+  box-shadow: 0 0 14px #00ff66;
+  text-shadow: none;
+}
+
+[data-theme="matrix"] .button-primary {
+  background: #002b0f;
+  border: 1px solid #00ff66;
+  color: #00ff66;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.4);
+}
+
+[data-theme="matrix"] .button-primary:hover {
+  background: #00ff66;
+  color: #000000;
+  box-shadow: 0 0 18px #00ff66;
+  text-shadow: none;
+}
+
+[data-theme="matrix"] .panic-button {
+  background: #180004;
+  border: 1px solid #ff1133;
+  color: #ff3355;
+  box-shadow: 0 0 14px rgba(255, 17, 51, 0.4);
+  text-shadow: 0 0 8px #ff1133;
+}
+
+[data-theme="matrix"] .panic-button:hover {
+  background: #ff1133;
+  color: #000000;
+  box-shadow: 0 0 20px #ff1133;
+  text-shadow: none;
+}
+
+[data-theme="matrix"] .app-tab {
+  background: #030805;
+  border-color: #003311;
+  color: #00aa44;
+}
+
+[data-theme="matrix"] .app-tab[aria-selected="true"] {
+  background: #001f0a;
+  border: 1px solid #00ff66;
+  border-bottom: none;
+  color: #00ff66;
+  box-shadow: inset 0 0 12px rgba(0, 255, 102, 0.25), 0 -2px 10px rgba(0, 255, 102, 0.2);
+  text-shadow: 0 0 8px #00ff66;
+}
+
+[data-theme="matrix"] .theme-button[aria-pressed="true"] {
+  background: #00ff66;
+  color: #000000;
+  border-color: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+  text-shadow: none;
+}
+
+[data-theme="matrix"] .address-bar {
+  background: #050d08;
+  border-bottom: 1px solid #003311;
+}
+
+[data-theme="matrix"] .address-field {
+  background: #020503;
+  border: 1px solid #003311;
+  color: #00ff66;
+  box-shadow: inset 0 0 8px rgba(0, 255, 102, 0.1);
+}
+
+[data-theme="matrix"] .address-text {
+  color: #00ff66;
+}
+
+[data-theme="matrix"] .address-caption {
+  color: #00aa44;
+}
+
+[data-theme="matrix"] .chat-line {
+  background: #07120a;
+  border: 1px solid #003311;
+  border-radius: 0;
+}
+
+[data-theme="matrix"] .chat-line-user {
+  background: #020804;
+  border-color: #00ff66;
+  box-shadow: 0 0 8px rgba(0, 255, 102, 0.2);
+}
+
+[data-theme="matrix"] .field,
+[data-theme="matrix"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
+[data-theme="matrix"] .settings-grid select,
+[data-theme="matrix"] textarea {
+  border: 1px solid #003311;
+  background: #020503;
+  color: #00ff66;
+}
+
+[data-theme="matrix"] .yt-screen {
+  border: 1px solid #00ff66;
+  border-radius: 0;
+  box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+}
+
+[data-theme="matrix"] .work-view {
+  background: #050a06;
+  color: #00ff66;
+  border: 2px solid #00ff66;
+}
+
+[data-theme="matrix"] .document-header {
+  background: #001f0a;
+  color: #00ff66;
+  border-bottom: 1px solid #00ff66;
+}
+
+[data-theme="matrix"] .document-icon {
+  background: #003311;
+  color: #00ff66;
+  border: 1px solid #00ff66;
+  box-shadow: 0 0 8px #00ff66;
+}
+
+[data-theme="matrix"] .work-sheet {
+  background: #050a06;
+  color: #00ff66;
+}
+
+[data-theme="matrix"] .work-sheet td,
+[data-theme="matrix"] .work-sheet th {
+  border-color: #002b0f;
+}
+
+[data-theme="matrix"] .work-sheet .data-heading {
+  background: #00220d;
+  color: #00ff66;
+}
+
+[data-theme="matrix"] .work-sheet .selected-cell {
+  outline: 2px solid #00ff66;
+  background: #003311;
+  color: #00ff66;
+}
+
+[data-theme="matrix"] .document-close {
+  background: #00220d;
+  color: #00ff66;
+  border: 1px solid #00ff66;
+}
+
+[data-theme="matrix"] .document-close:hover:enabled {
+  background: #ff1133;
+  color: #000000;
+}
+
