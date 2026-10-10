@@ -3,6 +3,48 @@ import { BlinkTracker, calculateEAR, countPeople } from './geometry.js';
 export const FRESHNESS_MS = 1000;
 const PERSON_CONFIDENCE = 0.45;
 const PERSON_INTERVAL_MS = 300;
+export const CAMERA_CONSTRAINTS = [
+  { video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }, audio: false },
+  { video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+  { video: true, audio: false },
+];
+
+export async function acquireCameraStream(mediaDevices) {
+  if (!mediaDevices?.getUserMedia) {
+    throw new Error('กล้องต้องใช้ localhost/HTTPS และ browser ที่รองรับ');
+  }
+  let lastError;
+  for (const constraints of CAMERA_CONSTRAINTS) {
+    try {
+      const stream = await mediaDevices.getUserMedia(constraints);
+      if (stream) return stream;
+    } catch (err) {
+      lastError = err;
+      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        throw err;
+      }
+    }
+  }
+  throw lastError || new Error('ไม่สามารถเข้าถึงกล้องได้');
+}
+
+export function formatCameraError(error) {
+  if (!error) return 'เกิดข้อผิดพลาดไม่ทราบสาเหตุในการเปิดกล้อง';
+  const name = error.name || '';
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    return 'เบราว์เซอร์ถูกปฏิเสธการเข้าถึงกล้อง (กรุณากดอนุญาตสิทธิ์ที่ไอคอนกล้องข้าง URL)';
+  }
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    return 'ไม่พบอุปกรณ์กล้องในเครื่องของคุณ (กรุณาเสียบกล้องหรือตรวจสอบการเชื่อมต่อ)';
+  }
+  if (name === 'NotReadableError' || name === 'TrackStartError') {
+    return 'กล้องกำลังถูกโปรแกรมอื่นใช้งานอยู่ (เช่น Zoom/Teams/Chrome แถบอื่น)';
+  }
+  if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+    return 'อุปกรณ์กล้องไม่รองรับความละเอียดที่ระบุ';
+  }
+  return error.message || 'ไม่สามารถเปิดกล้องได้';
+}
 
 export class VisionSession {
   constructor({ onPerson = () => {}, onBlink = () => {}, onStatus = () => {}, onFaceMeshResults = () => {}, onPersonResults = () => {}, onStreamReady = () => {}, clock = () => performance.now() } = {}, {
@@ -134,11 +176,22 @@ export class VisionSession {
   async initializeCamera(token) {
     let stream;
     try {
-      if (!this.mediaDevices?.getUserMedia) throw new Error('กล้องต้องใช้ localhost/HTTPS และ browser ที่รองรับ');
-      stream = await this.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false });
+      stream = await acquireCameraStream(this.mediaDevices);
       if (!this.valid(token)) { stream.getTracks().forEach((track) => track.stop()); return; }
+      const videoTracks = stream.getVideoTracks?.() ?? [];
+      if (stream.getVideoTracks && videoTracks.length === 0) {
+        throw new Error('ไม่พบสัญญาณภาพวิดีโอจากกล้อง');
+      }
       this.stream = stream;
-      this.video.srcObject = stream;
+      if (this.video) {
+        this.video.muted = true;
+        this.video.defaultMuted = true;
+        this.video.playsInline = true;
+        this.video.setAttribute?.('playsinline', '');
+        this.video.setAttribute?.('muted', '');
+        this.video.setAttribute?.('autoplay', '');
+        this.video.srcObject = stream;
+      }
       this.callbacks.onStreamReady?.(stream);
       stream.getTracks().forEach((track) => {
         const ended = () => {
@@ -178,7 +231,7 @@ export class VisionSession {
       if (!this.valid(token)) return;
       this.stop();
       this.cameraState = 'error';
-      this.error = error.message;
+      this.error = formatCameraError(error);
       this.publish();
     }
   }

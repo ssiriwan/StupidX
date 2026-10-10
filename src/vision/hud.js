@@ -32,6 +32,7 @@ export function createCameraHud(options = {}) {
         <div class="hud-title">
           <span class="hud-dot"></span>
           <strong>AI RADAR MIRROR</strong>
+          <span class="hud-status-pill" data-hud-pill>⚪ ปิดอยู่</span>
         </div>
         <div class="hud-controls">
           <button type="button" class="hud-btn-min" data-hud-min title="ย่อ/ขยาย">_</button>
@@ -69,6 +70,9 @@ export function createCameraHud(options = {}) {
     video.defaultMuted = true;
     video.playsInline = true;
     video.autoplay = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('autoplay', '');
 
     canvas = root.querySelector('canvas');
     overlay = root.querySelector('.hud-overlay');
@@ -131,6 +135,9 @@ export function createCameraHud(options = {}) {
       video.defaultMuted = true;
       video.playsInline = true;
       video.autoplay = true;
+      video.setAttribute('muted', '');
+      video.setAttribute('playsinline', '');
+      video.setAttribute('autoplay', '');
       if (video.srcObject !== stream) {
         video.srcObject = stream;
       }
@@ -140,10 +147,15 @@ export function createCameraHud(options = {}) {
         }
       };
       tryPlay();
-      video.onloadedmetadata = tryPlay;
-      video.oncanplay = tryPlay;
+      video.addEventListener('loadedmetadata', tryPlay, { once: true });
+      video.addEventListener('canplay', tryPlay);
     }
     if (overlay) overlay.hidden = true;
+    const pill = root?.querySelector('[data-hud-pill]');
+    if (pill) {
+      pill.textContent = '🟢 กำลังเฝ้าระวัง';
+      pill.className = 'hud-status-pill ready';
+    }
     if (telemetryPeople && telemetryPeople.textContent === 'รอเปิดกล้อง...') {
       telemetryPeople.textContent = 'กำลังเริ่มตรวจจับ...';
       telemetryPeople.style.color = 'var(--accent)';
@@ -159,6 +171,11 @@ export function createCameraHud(options = {}) {
     stopLoop();
     sourceVideo = null;
     if (video) video.srcObject = null;
+    const pill = root?.querySelector('[data-hud-pill]');
+    if (pill) {
+      pill.textContent = '⚪ ปิดอยู่';
+      pill.className = 'hud-status-pill';
+    }
     if (overlay) {
       overlay.hidden = false;
       if (overlayMsg) overlayMsg.textContent = 'กล้องยังไม่เปิด';
@@ -191,23 +208,49 @@ export function createCameraHud(options = {}) {
 
   function updateStatus(status) {
     if (!overlay) return;
+    const pill = root?.querySelector('[data-hud-pill]');
+
+    if (status?.camera?.state === 'error' || status?.error) {
+      overlay.hidden = false;
+      stopLoop();
+      if (overlayMsg) overlayMsg.textContent = '⚠️ ไม่สามารถเปิดกล้องได้';
+      if (overlaySub) overlaySub.textContent = status.error || 'กรุณาอนุญาตสิทธิ์เข้าถึงกล้องในเบราว์เซอร์';
+      if (startBtn) {
+        startBtn.hidden = false;
+        startBtn.textContent = '🔄 ลองเปิดกล้องอีกครั้ง';
+      }
+      if (pill) {
+        pill.textContent = '🔴 ข้อผิดพลาด';
+        pill.className = 'hud-status-pill error';
+      }
+      return;
+    }
+
     if (status?.running) {
       if (status.camera?.ready) {
         overlay.hidden = true;
         startLoop();
+        if (pill) {
+          pill.textContent = '🟢 กำลังเฝ้าระวัง';
+          pill.className = 'hud-status-pill ready';
+        }
       } else if (status.camera?.state === 'loading') {
         overlay.hidden = false;
         if (overlayMsg) overlayMsg.textContent = '⏳ กำลังขอสิทธิ์และเปิดกล้อง...';
         if (overlaySub) overlaySub.textContent = 'หากมีกล่องแจ้งเตือน กรุณากด "Allow" เพื่ออนุญาตใช้งานกล้อง';
         if (startBtn) startBtn.hidden = true;
-      } else if (status.camera?.state === 'error') {
+        if (pill) {
+          pill.textContent = '🟡 กำลังเชื่อมต่อ...';
+          pill.className = 'hud-status-pill loading';
+        }
+      } else if (status.camera?.state === 'interrupted') {
         overlay.hidden = false;
-        stopLoop();
-        if (overlayMsg) overlayMsg.textContent = '⚠️ ไม่สามารถเปิดกล้องได้';
-        if (overlaySub) overlaySub.textContent = status.error || 'กรุณาอนุญาตสิทธิ์เข้าถึงกล้องในเบราว์เซอร์';
-        if (startBtn) {
-          startBtn.hidden = false;
-          startBtn.textContent = '🔄 ลองเปิดกล้องอีกครั้ง';
+        if (overlayMsg) overlayMsg.textContent = '⏸️ ภาพจากกล้องหยุดชั่วคราว';
+        if (overlaySub) overlaySub.textContent = 'สัญญาณภาพจากกล้องขาดหาย กำลังรอภาพกลับมา...';
+        if (startBtn) startBtn.hidden = true;
+        if (pill) {
+          pill.textContent = '🟡 ภาพขาดหาย';
+          pill.className = 'hud-status-pill loading';
         }
       }
     } else {
@@ -218,6 +261,10 @@ export function createCameraHud(options = {}) {
       if (startBtn) {
         startBtn.hidden = false;
         startBtn.textContent = '📷 กดเปิดกล้องทันที';
+      }
+      if (pill) {
+        pill.textContent = '⚪ ปิดอยู่';
+        pill.className = 'hud-status-pill';
       }
     }
   }
@@ -245,24 +292,16 @@ export function createCameraHud(options = {}) {
 
   function renderCanvas() {
     if (!canvas) return;
-    const src = (sourceVideo && sourceVideo.readyState >= 2 && sourceVideo.videoWidth > 0)
-      ? sourceVideo
-      : (video && video.readyState >= 2 && video.videoWidth > 0 ? video : null);
+    const vw = video?.videoWidth || sourceVideo?.videoWidth || 640;
+    const vh = video?.videoHeight || sourceVideo?.videoHeight || 480;
 
-    if (src) {
-      if (canvas.width !== src.videoWidth || canvas.height !== src.videoHeight) {
-        canvas.width = src.videoWidth;
-        canvas.height = src.videoHeight;
-      }
+    if (canvas.width !== vw || canvas.height !== vh) {
+      canvas.width = vw;
+      canvas.height = vh;
     }
 
     const ctx = canvas.getContext('2d');
-    if (src && canvas.width > 0 && canvas.height > 0) {
-      // Draw live camera image directly onto canvas
-      ctx.drawImage(src, 0, 0, canvas.width, canvas.height);
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const effectiveCount = Math.max(lastFaceCount, lastPersonCount);
 
