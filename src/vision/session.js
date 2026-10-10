@@ -80,6 +80,8 @@ export class VisionSession {
 
   getStream() { return this.stream ?? null; }
 
+  getVideoElement() { return this.video ?? null; }
+
   unavailable(force = false) {
     if (this.personAvailable || force) {
       this.personAvailable = false;

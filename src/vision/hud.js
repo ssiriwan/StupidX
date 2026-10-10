@@ -2,6 +2,7 @@ export function createCameraHud(options = {}) {
   const onStartCamera = options.onStartCamera;
   let root;
   let video;
+  let sourceVideo = null;
   let canvas;
   let overlay;
   let overlayMsg;
@@ -12,6 +13,7 @@ export function createCameraHud(options = {}) {
   let telemetryBlink;
   let isMinimized = false;
   let isHidden = false;
+  let animId = null;
 
   let lastFaces = [];
   let lastPredictions = [];
@@ -64,6 +66,7 @@ export function createCameraHud(options = {}) {
     `;
     video = root.querySelector('video');
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
     video.autoplay = true;
 
@@ -83,6 +86,22 @@ export function createCameraHud(options = {}) {
     });
 
     container.append(root);
+  }
+
+  function startLoop() {
+    if (animId !== null) return;
+    function loop() {
+      renderCanvas();
+      animId = requestAnimationFrame(loop);
+    }
+    animId = requestAnimationFrame(loop);
+  }
+
+  function stopLoop() {
+    if (animId !== null) {
+      cancelAnimationFrame(animId);
+      animId = null;
+    }
   }
 
   function toggleMinimize() {
@@ -105,11 +124,24 @@ export function createCameraHud(options = {}) {
     root.hidden = false;
   }
 
-  function attachStream(stream) {
-    if (!video || !stream) return;
-    if (video.srcObject !== stream) {
-      video.srcObject = stream;
-      video.play().catch(() => {});
+  function attachStream(stream, srcVideo = null) {
+    if (srcVideo) sourceVideo = srcVideo;
+    if (video && stream) {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.autoplay = true;
+      if (video.srcObject !== stream) {
+        video.srcObject = stream;
+      }
+      const tryPlay = () => {
+        if (video && video.paused) {
+          video.play().catch(() => {});
+        }
+      };
+      tryPlay();
+      video.onloadedmetadata = tryPlay;
+      video.oncanplay = tryPlay;
     }
     if (overlay) overlay.hidden = true;
     if (telemetryPeople && telemetryPeople.textContent === 'รอเปิดกล้อง...') {
@@ -120,9 +152,12 @@ export function createCameraHud(options = {}) {
       telemetryBlink.textContent = 'ตาเปิด';
       telemetryBlink.style.color = 'var(--accent)';
     }
+    startLoop();
   }
 
   function detachStream() {
+    stopLoop();
+    sourceVideo = null;
     if (video) video.srcObject = null;
     if (overlay) {
       overlay.hidden = false;
@@ -159,6 +194,7 @@ export function createCameraHud(options = {}) {
     if (status?.running) {
       if (status.camera?.ready) {
         overlay.hidden = true;
+        startLoop();
       } else if (status.camera?.state === 'loading') {
         overlay.hidden = false;
         if (overlayMsg) overlayMsg.textContent = '⏳ กำลังขอสิทธิ์และเปิดกล้อง...';
@@ -166,6 +202,7 @@ export function createCameraHud(options = {}) {
         if (startBtn) startBtn.hidden = true;
       } else if (status.camera?.state === 'error') {
         overlay.hidden = false;
+        stopLoop();
         if (overlayMsg) overlayMsg.textContent = '⚠️ ไม่สามารถเปิดกล้องได้';
         if (overlaySub) overlaySub.textContent = status.error || 'กรุณาอนุญาตสิทธิ์เข้าถึงกล้องในเบราว์เซอร์';
         if (startBtn) {
@@ -175,6 +212,7 @@ export function createCameraHud(options = {}) {
       }
     } else {
       overlay.hidden = false;
+      stopLoop();
       if (overlayMsg) overlayMsg.textContent = 'กล้องยังไม่เปิด';
       if (overlaySub) overlaySub.textContent = 'คลิกเพื่อเริ่มตรวจจับใบหน้าและคนข้างหลัง';
       if (startBtn) {
@@ -206,18 +244,30 @@ export function createCameraHud(options = {}) {
   }
 
   function renderCanvas() {
-    if (!canvas || !video) return;
-    if (video.videoWidth && canvas.width !== video.videoWidth) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+    if (!canvas) return;
+    const src = (sourceVideo && sourceVideo.readyState >= 2 && sourceVideo.videoWidth > 0)
+      ? sourceVideo
+      : (video && video.readyState >= 2 && video.videoWidth > 0 ? video : null);
+
+    if (src) {
+      if (canvas.width !== src.videoWidth || canvas.height !== src.videoHeight) {
+        canvas.width = src.videoWidth;
+        canvas.height = src.videoHeight;
+      }
     }
+
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (src && canvas.width > 0 && canvas.height > 0) {
+      // Draw live camera image directly onto canvas
+      ctx.drawImage(src, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
     const effectiveCount = Math.max(lastFaceCount, lastPersonCount);
 
     // 1. Draw FaceMesh bounding boxes & eye landmarks
-    if (lastFaces && lastFaces.length > 0) {
+    if (lastFaces && lastFaces.length > 0 && canvas.width > 0) {
       lastFaces.forEach((face, idx) => {
         let minX = 1, minY = 1, maxX = 0, maxY = 0;
         for (const pt of face) {
@@ -294,7 +344,7 @@ export function createCameraHud(options = {}) {
     }
 
     // 2. Draw COCO-SSD person detections if present
-    if (Array.isArray(lastPredictions)) {
+    if (Array.isArray(lastPredictions) && canvas.width > 0) {
       const people = lastPredictions.filter(p => p.class === 'person');
       people.forEach((p, idx) => {
         const [x, y, w, h] = p.bbox;
@@ -324,14 +374,12 @@ export function createCameraHud(options = {}) {
     lastEar = ear;
     lastClosed = closed;
     updateTelemetry();
-    renderCanvas();
   }
 
   function drawPredictions(predictions, personCount) {
     lastPredictions = predictions ?? [];
     lastPersonCount = personCount ?? 0;
     updateTelemetry();
-    renderCanvas();
   }
 
   return {

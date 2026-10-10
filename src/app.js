@@ -52,7 +52,7 @@ const shell = createShell({
         void vision?.start();
       } else {
         const stream = vision?.getStream?.();
-        if (stream) hud.attachStream(stream);
+        if (stream) hud.attachStream(stream, vision?.getVideoElement?.());
       }
     }
   },
@@ -134,11 +134,11 @@ vision = createVision({
     hud.updateStatus(status);
     const stream = vision?.getStream?.();
     if (stream && status.camera?.ready) {
-      hud.attachStream(stream);
+      hud.attachStream(stream, vision?.getVideoElement?.());
     }
     session.emit();
   },
-  onStreamReady: (stream) => hud.attachStream(stream),
+  onStreamReady: (stream) => hud.attachStream(stream, vision?.getVideoElement?.()),
   onFaceMeshResults: (results, ear, closed) => hud.drawFaceMesh(results, ear, closed),
   onPersonResults: (predictions, count) => hud.drawPredictions(predictions, count),
 });

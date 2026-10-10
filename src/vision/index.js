@@ -111,5 +111,8 @@ export function createVision(options = {}, dependencies = {}) {
   function getStream() {
     return session?.getStream() ?? null;
   }
-  return { mount, start, stop, reset, dispose, getStatus, getStream };
+  function getVideoElement() {
+    return session?.getVideoElement() ?? null;
+  }
+  return { mount, start, stop, reset, dispose, getStatus, getStream, getVideoElement };
 }
