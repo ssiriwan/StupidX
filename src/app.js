@@ -53,8 +53,24 @@ hud.mount(document.body);
 
 function render(state) {
   let status;
-  if (simulation) status = `จำลองชัดเจน: ${state.present ? 'ตรวจพบคนเพิ่ม' : state.unknown ? 'ข้อมูลยังไม่พร้อม' : 'ไม่พบคนเพิ่ม'}`;
-  else status = state.fresh ? (state.present ? 'ตรวจพบคนหรือใบหน้าเพิ่ม' : 'กล้องพร้อม · ไม่พบคนเพิ่ม') : visionStatus;
+  const vStatus = vision?.getStatus();
+  const faceCount = vStatus?.faceCount ?? 0;
+  const personCount = vStatus?.person?.count ?? 0;
+  const effectiveCount = Math.max(faceCount, personCount);
+
+  if (simulation) {
+    status = `จำลอง: ${state.present ? '🚨 ตรวจพบคนเพิ่ม (เจ้านายมา!)' : state.unknown ? 'ข้อมูลยังไม่พร้อม' : '🟢 ปลอดภัย · พบคุณคนเดียว'}`;
+  } else if (state.fresh) {
+    if (state.present) {
+      status = '🚨 เจ้านายมา! ตรวจพบคนข้างหลัง';
+    } else if (effectiveCount === 0) {
+      status = '🟡 กล้องพร้อม · รอผู้ใช้นั่งหน้ากล้อง';
+    } else {
+      status = '🟢 ปลอดภัย · พบคุณคนเดียว (ไม่มีเจ้านาย)';
+    }
+  } else {
+    status = visionStatus;
+  }
   const cameraRunning = vision?.getStatus()?.running ?? false;
   shell.update({ ...state, status, cameraRunning });
   work.update({ canReturn: state.canReturn, unknown: state.unknown });
