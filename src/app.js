@@ -121,14 +121,24 @@ session = new SessionController({
   onMode: switchSurface,
   onChange: render,
   onTab: (tab, previous) => { features[previous].suspend('tab'); features[tab].resume(); },
-  onBlink: () => features.youtube.blinkPause(),
+  onBlink: () => features.youtube.attentionPause({ type: 'blink', reason: 'กระพริบตา' }),
 });
 for (const [tab, feature] of Object.entries(features)) feature.mount(shell.refs.panels[tab]);
 launcher.mount(shell.refs.launcher);
 
 vision = createVision({
   onPerson: (observation) => { if (!simulation) session.observePerson(observation); },
-  onBlink: (observation) => { if (!simulation) session.observeBlink(observation); },
+  onBlink: (observation) => {
+    if (!simulation) {
+      session.observeBlink(observation);
+      features.youtube.attentionPause({ type: 'blink', reason: 'กระพริบตา' });
+    }
+  },
+  onAttention: (observation) => {
+    if (!simulation && !observation.lookingAtScreen) {
+      features.youtube.attentionPause({ type: 'look-away', reason: observation.reason });
+    }
+  },
   onStatus: (status) => {
     visionStatus = status.text ?? 'กล้อง: ข้อมูลไม่พร้อม';
     hud.updateStatus(status);
@@ -139,14 +149,15 @@ vision = createVision({
     session.emit();
   },
   onStreamReady: (stream) => hud.attachStream(stream, vision?.getVideoElement?.()),
-  onFaceMeshResults: (results, ear, closed) => hud.drawFaceMesh(results, ear, closed),
+  onFaceMeshResults: (results, ear, closed, attention) => hud.drawFaceMesh(results, ear, closed, attention),
   onPersonResults: (predictions, count) => hud.drawPredictions(predictions, count),
 });
 vision.mount(shell.refs.vision);
 
-shell.refs.settings.innerHTML = `<section class="simulation-controls"><h3>โหมดจำลองสำหรับเดโม</h3><p class="muted">ส่งเหตุการณ์ผ่าน controller เดียวกับกล้องจริง · ไม่ใช่การตรวจจับจริง</p><label class="simulation-toggle"><input type="checkbox" data-simulation> เปิดโหมดจำลอง</label><p class="muted" role="status" data-simulation-label></p><div class="simulation-buttons"><button class="button" type="button" data-sim-blink>จำลองกะพริบตา</button><button class="button" type="button" data-sim-person>จำลองคนเข้ามา</button></div><p class="muted">B: เปิดรายงานทันที · Escape: ปิดรายงานเมื่อผ่านเงื่อนไขแล้ว หากข้อมูลกล้องไม่พร้อม ให้กด × และยืนยันด้วยตนเอง</p></section>`;
+shell.refs.settings.innerHTML = `<section class="simulation-controls"><h3>โหมดจำลองสำหรับเดโม</h3><p class="muted">ส่งเหตุการณ์ผ่าน controller เดียวกับกล้องจริง · ไม่ใช่การตรวจจับจริง</p><label class="simulation-toggle"><input type="checkbox" data-simulation> เปิดโหมดจำลอง</label><p class="muted" role="status" data-simulation-label></p><div class="simulation-buttons"><button class="button" type="button" data-sim-blink>จำลองกะพริบตา</button><button class="button" type="button" data-sim-lookaway>จำลองละสายตาจากจอ</button><button class="button" type="button" data-sim-person>จำลองคนเข้ามา</button></div><p class="muted">B: เปิดรายงานทันที · Escape: ปิดรายงานเมื่อผ่านเงื่อนไขแล้ว หากข้อมูลกล้องไม่พร้อม ให้กด × และยืนยันด้วยตนเอง</p></section>`;
 const simToggle = shell.refs.settings.querySelector('[data-simulation]');
 const simPerson = shell.refs.settings.querySelector('[data-sim-person]');
+const simLookaway = shell.refs.settings.querySelector('[data-sim-lookaway]');
 function emitSimulation() {
   if (!simulation) return;
   session.observePerson({ present: simulatedPerson, available: true, calibrated: true, observedAt: performance.now(), source: 'simulation' });
@@ -164,6 +175,11 @@ shell.refs.settings.querySelector('[data-sim-blink]').addEventListener('click', 
   if (!simulation || session.mode !== LEISURE) return;
   session.observeBlink({ closed: true, source: 'simulation' });
   session.observeBlink({ closed: false, source: 'simulation' });
+  features.youtube.attentionPause({ type: 'blink', reason: 'กระพริบตา' });
+}, options);
+simLookaway?.addEventListener('click', () => {
+  if (!simulation || session.mode !== LEISURE) return;
+  features.youtube.attentionPause({ type: 'look-away', reason: 'head-turned-left' });
 }, options);
 simPerson.addEventListener('click', () => {
   if (!simulation || session.mode !== LEISURE) return;

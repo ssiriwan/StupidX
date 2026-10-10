@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BlinkTracker, calculateEAR, countPeople } from '../src/vision/geometry.js';
+import { BlinkTracker, calculateEAR, countPeople, checkAttention, AttentionTracker } from '../src/vision/geometry.js';
 import { loadCocoSsd, TFJS_VERSION, COCO_SSD_VERSION } from '../src/vision/coco-ssd.js';
 import { VisionSession, FRESHNESS_MS } from '../src/vision/session.js';
 import { createVision } from '../src/vision/index.js';
@@ -370,4 +370,53 @@ test('settings now offer one start/stop flow with no calibration fields', () => 
   ]);
   assert.ok(nodes.some((node) => node.textContent.includes('ไม่ต้องตั้งกรอบหรือปรับความไว')));
   vision.dispose();
+});
+
+test('checkAttention detects screen attention, eye closure, head turns and gaze deviations', () => {
+  const normalFace = landmarks(0.3);
+  assert.equal(checkAttention(normalFace, 0.3).lookingAtScreen, true);
+
+  // No face
+  assert.equal(checkAttention(null).lookingAtScreen, false);
+  assert.equal(checkAttention([]).lookingAtScreen, false);
+
+  // Closed eyes
+  assert.equal(checkAttention(normalFace, 0.1).lookingAtScreen, false);
+  assert.equal(checkAttention(normalFace, 0.1).reason, 'eyes-closed');
+
+  // Head turned left (nose x closer to left eye 33)
+  const turnedLeft = landmarks(0.3);
+  turnedLeft[1] = { x: 0.42, y: 0.4 }; // nose x shifted close to 0.4
+  const leftRes = checkAttention(turnedLeft, 0.3);
+  assert.equal(leftRes.lookingAtScreen, false);
+  assert.equal(leftRes.reason, 'head-turned-left');
+
+  // Head turned right (nose x closer to right eye 263)
+  const turnedRight = landmarks(0.3);
+  turnedRight[1] = { x: 0.58, y: 0.4 }; // nose x shifted close to 0.6
+  const rightRes = checkAttention(turnedRight, 0.3);
+  assert.equal(rightRes.lookingAtScreen, false);
+  assert.equal(rightRes.reason, 'head-turned-right');
+});
+
+test('AttentionTracker uses hysteresis to prevent micro-flicker and reports looking-away transition', () => {
+  const tracker = new AttentionTracker(2);
+  assert.equal(tracker.lookingAtScreen, true);
+
+  // Single frame looking away does not trigger yet
+  assert.equal(tracker.observe(false, 'head-turned-left'), null);
+  assert.equal(tracker.lookingAtScreen, true);
+
+  // Second consecutive frame triggers transition
+  const transition = tracker.observe(false, 'head-turned-left');
+  assert.deepEqual(transition, { lookingAtScreen: false, reason: 'head-turned-left' });
+  assert.equal(tracker.lookingAtScreen, false);
+
+  // Repeated looking away does not re-emit
+  assert.equal(tracker.observe(false, 'head-turned-left'), null);
+
+  // Looking back restores lookingAtScreen
+  const back = tracker.observe(true);
+  assert.deepEqual(back, { lookingAtScreen: true, reason: 'looking-at-screen' });
+  assert.equal(tracker.lookingAtScreen, true);
 });

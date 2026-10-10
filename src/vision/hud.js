@@ -11,6 +11,7 @@ export function createCameraHud(options = {}) {
   let telemetryPeople;
   let telemetryEar;
   let telemetryBlink;
+  let telemetryAttention;
   let isMinimized = false;
   let isHidden = false;
   let animId = null;
@@ -21,6 +22,7 @@ export function createCameraHud(options = {}) {
   let lastPersonCount = 0;
   let lastEar = null;
   let lastClosed = false;
+  let lastAttention = { lookingAtScreen: true, reason: 'looking-at-screen' };
 
   function mount(container) {
     root = document.createElement('aside');
@@ -62,6 +64,10 @@ export function createCameraHud(options = {}) {
             <span>สถานะกะพริบตา:</span>
             <strong data-hud-blink>รอเปิดกล้อง...</strong>
           </div>
+          <div class="hud-stat-row">
+            <span>การมองหน้าจอ:</span>
+            <strong data-hud-attention>รอเปิดกล้อง...</strong>
+          </div>
         </div>
       </div>
     `;
@@ -82,6 +88,7 @@ export function createCameraHud(options = {}) {
     telemetryPeople = root.querySelector('[data-hud-people]');
     telemetryEar = root.querySelector('[data-hud-ear]');
     telemetryBlink = root.querySelector('[data-hud-blink]');
+    telemetryAttention = root.querySelector('[data-hud-attention]');
 
     root.querySelector('[data-hud-min]').addEventListener('click', toggleMinimize);
     root.querySelector('[data-hud-close]').addEventListener('click', toggleVisibility);
@@ -195,6 +202,7 @@ export function createCameraHud(options = {}) {
     lastPersonCount = 0;
     lastEar = null;
     lastClosed = false;
+    lastAttention = { lookingAtScreen: true, reason: 'looking-at-screen' };
     if (telemetryPeople) {
       telemetryPeople.textContent = 'รอเปิดกล้อง...';
       telemetryPeople.style.color = 'var(--muted)';
@@ -203,6 +211,10 @@ export function createCameraHud(options = {}) {
     if (telemetryBlink) {
       telemetryBlink.textContent = 'รอเปิดกล้อง...';
       telemetryBlink.style.color = 'var(--muted)';
+    }
+    if (telemetryAttention) {
+      telemetryAttention.textContent = 'รอเปิดกล้อง...';
+      telemetryAttention.style.color = 'var(--muted)';
     }
   }
 
@@ -288,6 +300,27 @@ export function createCameraHud(options = {}) {
         telemetryPeople.style.color = '#ff3333';
       }
     }
+    if (telemetryAttention) {
+      if (lastFaceCount === 0) {
+        telemetryAttention.textContent = '❌ ไม่พบคนหน้าจอ';
+        telemetryAttention.style.color = '#ff5555';
+      } else if (lastClosed) {
+        telemetryAttention.textContent = '👀 กะพริบตา / หลับตา';
+        telemetryAttention.style.color = '#ffbb00';
+      } else if (!lastAttention.lookingAtScreen) {
+        let text = '⚠️ ละสายตาจากจอ';
+        if (lastAttention.reason === 'head-turned-left') text = '⚠️ หันซ้าย (ละสายตา)';
+        else if (lastAttention.reason === 'head-turned-right') text = '⚠️ หันขวา (ละสายตา)';
+        else if (lastAttention.reason === 'head-tilted-up') text = '⚠️ เงยหน้า (ละสายตา)';
+        else if (lastAttention.reason === 'head-tilted-down') text = '⚠️ ก้มหน้า (ละสายตา)';
+        else if (lastAttention.reason === 'gaze-away') text = '⚠️ กลอกตาออกนอกจอ';
+        telemetryAttention.textContent = text;
+        telemetryAttention.style.color = '#ffbb00';
+      } else {
+        telemetryAttention.textContent = '🟢 มองหน้าจอตรง';
+        telemetryAttention.style.color = '#00ff88';
+      }
+    }
   }
 
   function renderCanvas() {
@@ -324,7 +357,8 @@ export function createCameraHud(options = {}) {
         const bh = Math.min(canvas.height - by, (maxY - minY + padY * 2) * canvas.height);
 
         const isIntruder = idx > 0 || effectiveCount > 1;
-        const color = isIntruder ? '#ff3333' : '#00ff88';
+        const isLookingAway = !lastAttention.lookingAtScreen;
+        const color = isIntruder ? '#ff3333' : (lastClosed || isLookingAway ? '#ffbb00' : '#00ff88');
 
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
@@ -345,7 +379,11 @@ export function createCameraHud(options = {}) {
         ctx.stroke();
 
         // Label with flip compensation
-        const label = isIntruder ? '🚨 BOSS / INTRUDER' : '🟢 YOU (คุณ)';
+        let label = isIntruder ? '🚨 BOSS / INTRUDER' : '🟢 YOU (คุณ)';
+        if (!isIntruder) {
+          if (lastClosed) label = '👀 YOU (กะพริบตา)';
+          else if (isLookingAway) label = '⚠️ YOU (ละสายตาจากจอ)';
+        }
         const textY = by > 20 ? by - 6 : by + 16;
         ctx.font = 'bold 12px monospace';
         ctx.fillStyle = color;
@@ -358,7 +396,7 @@ export function createCameraHud(options = {}) {
 
         // Primary face eye markers & blink status
         if (idx === 0) {
-          ctx.fillStyle = lastClosed ? '#ffbb00' : '#00ff88';
+          ctx.fillStyle = (lastClosed || isLookingAway) ? '#ffbb00' : '#00ff88';
           const eyeIndices = [159, 145, 33, 133, 386, 374, 362, 263];
           eyeIndices.forEach(eyeIdx => {
             const pt = face[eyeIdx];
@@ -376,6 +414,20 @@ export function createCameraHud(options = {}) {
             ctx.translate(bx + bw - 4, textY + 16);
             ctx.scale(-1, 1);
             ctx.fillText('👀 PAUSED (กะพริบตา)', 0, 0);
+            ctx.restore();
+          } else if (isLookingAway) {
+            ctx.save();
+            ctx.fillStyle = '#ffbb00';
+            ctx.font = 'bold 11px monospace';
+            ctx.translate(bx + bw - 4, textY + 16);
+            ctx.scale(-1, 1);
+            let sub = '⚠️ NOT LOOKING AT SCREEN';
+            if (lastAttention.reason === 'head-turned-left') sub = '⚠️ TURNED LEFT (หันซ้าย)';
+            else if (lastAttention.reason === 'head-turned-right') sub = '⚠️ TURNED RIGHT (หันขวา)';
+            else if (lastAttention.reason === 'head-tilted-up') sub = '⚠️ TILTED UP (เงยหน้า)';
+            else if (lastAttention.reason === 'head-tilted-down') sub = '⚠️ TILTED DOWN (ก้มหน้า)';
+            else if (lastAttention.reason === 'gaze-away') sub = '⚠️ GAZE AWAY (กลอกตา)';
+            ctx.fillText(sub, 0, 0);
             ctx.restore();
           }
         }
@@ -407,11 +459,14 @@ export function createCameraHud(options = {}) {
     }
   }
 
-  function drawFaceMesh(results, ear, closed) {
+  function drawFaceMesh(results, ear, closed, attention = null) {
     lastFaces = results?.multiFaceLandmarks ?? [];
     lastFaceCount = lastFaces.length;
     lastEar = ear;
     lastClosed = closed;
+    if (attention) lastAttention = attention;
+    else if (lastFaceCount === 0) lastAttention = { lookingAtScreen: false, reason: 'no-face' };
+    else lastAttention = { lookingAtScreen: !closed, reason: closed ? 'eyes-closed' : 'looking-at-screen' };
     updateTelemetry();
   }
 

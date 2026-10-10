@@ -356,14 +356,40 @@ export function createYouTube({ canInteract = () => true } = {}) {
     status(`ค้นหา "${query}" เสร็จสิ้น`);
   }
 
-  function showBlinkLock() {
+  function showAttentionLock({ type = 'look-away', reason = '' } = {}) {
     isBlinkLocked = true;
     guard.pause();
     if (root) {
       const overlay = root.querySelector('[data-yt-blink-overlay]');
+      const icon = root.querySelector('[data-yt-lock-icon]');
+      const title = root.querySelector('[data-yt-lock-title]');
+      const desc = root.querySelector('[data-yt-lock-desc]');
       if (overlay) overlay.hidden = false;
+
+      let reasonText = 'คุณไม่ได้มองหน้าจอ';
+      if (type === 'blink') {
+        reasonText = 'ตรวจพบการกระพริบตา';
+        if (icon) icon.textContent = '👁️';
+        if (title) title.textContent = 'ตรวจพบการกระพริบตา! วิดีโอหยุดทำงาน';
+        if (desc) desc.innerHTML = 'ระบบ <strong>Anti-FOMO</strong> ล็อควิดีโอไว้ เพื่อให้แน่ใจว่าคุณจะไม่พลาดเนื้อหาสำคัญแม้แต่เฟรมเดียว';
+      } else {
+        if (reason === 'no-face') reasonText = 'ไม่พบคุณอยู่หน้าจอ';
+        else if (reason === 'head-turned-left') reasonText = 'หันศีรษะไปทางซ้าย (ไม่ได้มองจอ)';
+        else if (reason === 'head-turned-right') reasonText = 'หันศีรษะไปทางขวา (ไม่ได้มองจอ)';
+        else if (reason === 'head-tilted-up') reasonText = 'เงยหน้าขึ้น (ไม่ได้มองจอ)';
+        else if (reason === 'head-tilted-down') reasonText = 'ก้มหน้าลง (มองโทรศัพท์หรือคีย์บอร์ด)';
+        else if (reason === 'gaze-away') reasonText = 'สายตามองออกไปนอกจอ';
+
+        if (icon) icon.textContent = '👀';
+        if (title) title.textContent = 'ตรวจพบว่าไม่ได้มองหน้าจอ! วิดีโอหยุดทำงาน';
+        if (desc) desc.innerHTML = `ระบบ <strong>Anti-FOMO</strong> ตรวจพบว่า (${reasonText}) จึงหยุดวิดีโอไว้ เพื่อไม่ให้คุณพลาดเนื้อหาสำคัญ`;
+      }
     }
-    status('👁️ ตรวจพบการกระพริบตา! วิดีโอถูกล็อคไว้ กรุณากดเล่นต่อเอง');
+    status('👀 ตรวจพบว่าไม่ได้มองหน้าจอ! วิดีโอถูกล็อคไว้ กรุณากดเล่นต่อเองเมื่อพร้อม');
+  }
+
+  function showBlinkLock() {
+    showAttentionLock({ type: 'blink' });
   }
 
   function dismissBlinkLock() {
@@ -374,7 +400,7 @@ export function createYouTube({ canInteract = () => true } = {}) {
     }
     guard.resume();
     guard.play();
-    status('กำลังเล่นต่อ · พยายามอย่ากระพริบตา!');
+    status('กำลังเล่นต่อ · ตั้งใจดูหน้าจอไว้นะครับ!');
   }
 
   return {
@@ -432,12 +458,12 @@ export function createYouTube({ canInteract = () => true } = {}) {
                   </div>
                 </div>
 
-                <!-- ANTI-FOMO BLINK LOCK OVERLAY -->
+                <!-- ANTI-FOMO BLINK & ATTENTION LOCK OVERLAY -->
                 <div class="yt-blink-lock-overlay" data-yt-blink-overlay hidden>
                   <div class="yt-blink-card">
-                    <span class="yt-blink-icon">👁️</span>
-                    <h3>ตรวจพบการกระพริบตา! วิดีโอหยุดทำงาน</h3>
-                    <p>ระบบ <strong>Anti-FOMO</strong> ล็อควิดีโอไว้ เพื่อให้แน่ใจว่าคุณจะไม่พลาดเนื้อหาสำคัญแม้แต่เฟรมเดียว</p>
+                    <span class="yt-blink-icon" data-yt-lock-icon>👁️</span>
+                    <h3 data-yt-lock-title>ตรวจพบการกระพริบตา! วิดีโอหยุดทำงาน</h3>
+                    <p data-yt-lock-desc>ระบบ <strong>Anti-FOMO</strong> ล็อควิดีโอไว้ เพื่อให้แน่ใจว่าคุณจะไม่พลาดเนื้อหาสำคัญแม้แต่เฟรมเดียว</p>
                     <button type="button" class="button button-primary yt-resume-btn" data-yt-resume>
                       ▶ ยืนยันว่าพร้อมดูต่อ (กดเพื่อเล่นต่อ)
                     </button>
@@ -545,6 +571,10 @@ export function createYouTube({ canInteract = () => true } = {}) {
 
     blinkPause() {
       showBlinkLock();
+    },
+
+    attentionPause(details) {
+      showAttentionLock(details || { type: 'look-away' });
     },
 
     suspend(reason) {

@@ -1,4 +1,4 @@
-import { BlinkTracker, calculateEAR, countPeople } from './geometry.js';
+import { BlinkTracker, calculateEAR, countPeople, AttentionTracker, checkAttention } from './geometry.js';
 
 export const FRESHNESS_MS = 1000;
 const PERSON_CONFIDENCE = 0.45;
@@ -47,7 +47,7 @@ export function formatCameraError(error) {
 }
 
 export class VisionSession {
-  constructor({ onPerson = () => {}, onBlink = () => {}, onStatus = () => {}, onFaceMeshResults = () => {}, onPersonResults = () => {}, onStreamReady = () => {}, clock = () => performance.now() } = {}, {
+  constructor({ onPerson = () => {}, onBlink = () => {}, onStatus = () => {}, onFaceMeshResults = () => {}, onPersonResults = () => {}, onStreamReady = () => {}, onAttention = () => {}, clock = () => performance.now() } = {}, {
     video, mediaDevices = globalThis.navigator?.mediaDevices, timers = globalThis,
     loadFace, loadPerson = null,
   } = {}) {
@@ -56,13 +56,16 @@ export class VisionSession {
     this.timers = timers;
     this.loadFace = loadFace;
     this.loadPerson = loadPerson;
-    this.callbacks = { onPerson, onBlink, onStatus, onFaceMeshResults, onPersonResults, onStreamReady };
+    this.callbacks = { onPerson, onBlink, onStatus, onFaceMeshResults, onPersonResults, onStreamReady, onAttention };
     this.clock = clock;
     this.epoch = 0;
     this.revision = 0;
     this.running = false;
     this.disposed = false;
     this.blink = new BlinkTracker();
+    this.attention = new AttentionTracker();
+    this.lookingAtScreen = true;
+    this.attentionReason = 'looking-at-screen';
     this.cameraState = 'stopped';
     this.eyesState = 'stopped';
     this.personState = loadPerson ? 'stopped' : 'pending-approval';
@@ -102,6 +105,10 @@ export class VisionSession {
         state: this.eyesState,
         ready: this.eyesState === 'ready' && this.ear !== null && faceFresh,
         ageMs: faceAge,
+      },
+      attention: {
+        lookingAtScreen: this.lookingAtScreen,
+        reason: this.attentionReason,
       },
       person: {
         state: this.personState,
@@ -257,8 +264,18 @@ export class VisionSession {
           const transition = this.blink.observe(this.ear);
           if (transition) this.callbacks.onBlink({ ...transition, source: 'camera' });
         }
+
+        // Attention / Screen Gaze Tracking
+        const attention = checkAttention(primary, this.ear);
+        this.lookingAtScreen = attention.lookingAtScreen;
+        this.attentionReason = attention.reason;
+        const attentionTransition = this.attention.observe(attention.lookingAtScreen, attention.reason);
+        if (attentionTransition) {
+          this.callbacks.onAttention?.({ ...attentionTransition, source: 'camera' });
+        }
+
         this.publishObservation();
-        this.callbacks.onFaceMeshResults?.(results, this.ear, this.blink.closed);
+        this.callbacks.onFaceMeshResults?.(results, this.ear, this.blink.closed, attention);
       });
       this.eyesState = 'ready';
       this.publish();
@@ -307,6 +324,12 @@ export class VisionSession {
     if (this.faceObservedAt === null || now - this.faceObservedAt > FRESHNESS_MS) {
       this.blink.reset();
       this.ear = null;
+      const attTransition = this.attention.observe(false, 'no-face');
+      if (attTransition) {
+        this.lookingAtScreen = false;
+        this.attentionReason = 'no-face';
+        this.callbacks.onAttention?.({ ...attTransition, source: 'camera' });
+      }
     }
     const newFrame = this.video.currentTime !== this.lastVideoTime;
     if (this.video.readyState >= 2 && this.video.videoWidth && this.video.videoHeight && !this.video.paused && newFrame) {
@@ -375,6 +398,9 @@ export class VisionSession {
 
   clearObservations() {
     this.blink.reset();
+    this.attention.reset();
+    this.lookingAtScreen = true;
+    this.attentionReason = 'looking-at-screen';
     this.ear = null;
     this.faceCount = 0;
     this.personCount = 0;
