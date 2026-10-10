@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createShell, osOptions, subthemes, themes } from '../src/ui/shell.js';
+import { SessionController } from '../src/core/session.js';
 
 class MockClassList {
   constructor(node) {
@@ -368,7 +369,7 @@ test('clicking OS buttons dispatches onOS and updates document.documentElement.d
   runWithDOM(({ root, document }) => {
     const selectedOSList = [];
     const shell = createShell({
-      onOS: (os) => selectedOSList.push(os),
+      onOS: (os) => { selectedOSList.push(os); shell.update({ os }); },
     });
     shell.mount(root);
 
@@ -398,7 +399,7 @@ test('clicking Sub-theme buttons dispatches onSubtheme and updates document.docu
   runWithDOM(({ root, document }) => {
     const selectedSubthemes = [];
     const shell = createShell({
-      onSubtheme: (sub) => selectedSubthemes.push(sub),
+      onSubtheme: (subtheme) => { selectedSubthemes.push(subtheme); shell.update({ subtheme }); },
     });
     shell.mount(root);
 
@@ -469,6 +470,22 @@ test('shell.update({ os, subtheme, theme }) updates DOM datasets and UI state fo
     assert.equal(document.documentElement.dataset.theme, 'gov');
     assert.equal(currentLabel.textContent, 'ราชการไทย 1.0 (e-GP)');
 
+    shell.dispose();
+  });
+});
+
+test('rejected controller choices do not change rendered theme state', () => {
+  runWithDOM(({ root, document }) => {
+    let shell;
+    const session = new SessionController({ onChange: ({ os, subtheme, theme }) => shell.update({ os, subtheme, theme }) });
+    shell = createShell({ onOS: os => session.setOS(os), onSubtheme: subtheme => session.setSubtheme(subtheme) });
+    shell.mount(root);
+    session.setOS('xp'); session.setSubtheme('dark'); session.enterWork();
+    root.querySelector('[data-os-choice="win95"]').click();
+    root.querySelector('[data-subtheme-choice="matrix"]').click();
+    assert.equal(document.documentElement.dataset.os, 'xp');
+    assert.equal(document.documentElement.dataset.subtheme, 'dark');
+    assert.equal(document.documentElement.dataset.theme, 'dark');
     shell.dispose();
   });
 });

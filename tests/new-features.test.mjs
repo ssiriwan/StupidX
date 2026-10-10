@@ -335,11 +335,32 @@ function runWithDOM(fn) {
   }
 }
 
+async function runWithDOMAsync(fn) {
+  const { root, mockWindow, mockDocument, mockLocalStorage } = createMockDOM();
+  const previous = {
+    document: globalThis.document,
+    window: globalThis.window,
+    localStorage: globalThis.localStorage,
+    YT: globalThis.YT,
+  };
+  globalThis.document = mockDocument;
+  globalThis.window = mockWindow;
+  globalThis.localStorage = mockLocalStorage;
+  try {
+    return await fn({ root, mockWindow, mockDocument, mockLocalStorage });
+  } finally {
+    for (const key of ['document', 'window', 'localStorage', 'YT']) {
+      if (previous[key] === undefined) delete globalThis[key];
+      else globalThis[key] = previous[key];
+    }
+  }
+}
+
 /* =========================================================================
    1. AUTO-RESUME LOGIC TESTS
    ========================================================================= */
 
-test('auto-resume: attentionResume() plays video when locked via look-away, but respects manual pause', () => {
+test('auto-resume: sensor samples cannot resume a video that was not confirmed playing', () => {
   const playbackCalls = [];
   let allowedToInteract = true;
 
@@ -361,58 +382,20 @@ test('auto-resume: attentionResume() plays video when locked via look-away, but 
   assert.equal(yt.attentionResume(), false);
   assert.equal(playbackCalls.includes('play'), false);
 
-  // 2. Anti-FOMO lock triggered by looking away
-  yt.attentionPause({ type: 'look-away', reason: 'head-turned-left' });
-  assert.equal(yt.getState().isBlinkLocked, true);
-  assert.equal(playbackCalls.at(-1), 'pause');
-
-  // 3. Auto-resume triggers when user looks back at screen
-  assert.equal(yt.attentionResume(), true);
+  assert.equal(yt.attentionPause({ type: 'look-away', reason: 'head-turned-left' }), false);
+  yt.observeBlink({ closed: true, ear: 0.1 });
+  yt.observeBlink({ closed: false, ear: 0.3 });
+  yt.observeAttention({ lookingAtScreen: true, eyesOpen: true, stable: true });
   assert.equal(yt.getState().isBlinkLocked, false);
-  assert.equal(playbackCalls.at(-1), 'play');
+  assert.equal(playbackCalls.includes('play'), false);
 
-  // 4. Anti-FOMO lock triggered by blink
-  yt.blinkPause();
-  assert.equal(yt.getState().isBlinkLocked, true);
-  assert.equal(playbackCalls.at(-1), 'pause');
-
-  // 5. Auto-resume triggers again after eyes open
-  assert.equal(yt.attentionResume(), true);
-  assert.equal(yt.getState().isBlinkLocked, false);
-  assert.equal(playbackCalls.at(-1), 'play');
-
-  // 6. Manual user pause: must NEVER be overridden by attentionResume
   yt.pause();
   assert.equal(yt.getState().userPaused, true);
-  assert.equal(yt.getState().isBlinkLocked, false);
-  playbackCalls.length = 0;
-
-  // Looking away while manually paused does NOT enter blink lock
-  yt.attentionPause({ type: 'look-away', reason: 'head-turned-right' });
-  assert.equal(yt.getState().isBlinkLocked, false);
-  assert.equal(playbackCalls.length, 0);
-
-  // Looking back must NOT auto-play when user manually paused
   assert.equal(yt.attentionResume(), false);
-  assert.equal(playbackCalls.length, 0);
-  assert.equal(yt.getState().userPaused, true);
-
-  // 7. Manual play clears userPaused and re-enables auto-resume on future locks
-  yt.play();
-  assert.equal(yt.getState().userPaused, false);
-  assert.equal(playbackCalls.at(-1), 'play');
-
-  yt.attentionPause({ type: 'look-away' });
-  assert.equal(yt.getState().isBlinkLocked, true);
-
-  // If user pauses while currently locked, lock is released and manual pause sticks
-  yt.pause();
-  assert.equal(yt.getState().userPaused, true);
-  assert.equal(yt.getState().isBlinkLocked, false);
-  assert.equal(yt.attentionResume(), false);
+  assert.equal(playbackCalls.includes('play'), false);
 });
 
-test('auto-resume: attentionResume() respects canInteract condition (e.g. boss nearby)', () => {
+test('auto-resume: policy and attention events never override interaction restrictions', () => {
   const playbackCalls = [];
   let allowedToInteract = true;
 
@@ -428,26 +411,16 @@ test('auto-resume: attentionResume() respects canInteract condition (e.g. boss n
 
   const yt = createYouTube({ canInteract: () => allowedToInteract, guard });
 
-  // Trigger lock while user is still in leisure
-  yt.attentionPause({ type: 'look-away' });
-  assert.equal(yt.getState().isBlinkLocked, true);
-
-  // Boss arrives -> leisure interaction disabled
+  assert.equal(yt.setResumePolicy('manual'), true);
   allowedToInteract = false;
-
-  // Auto-resume must refuse to play while interaction is prohibited
+  yt.observeAttention({ lookingAtScreen: true, eyesOpen: true, stable: true });
   assert.equal(yt.attentionResume(), false);
-  assert.equal(yt.getState().isBlinkLocked, true);
   assert.equal(playbackCalls.includes('play'), false);
-
-  // Safe again -> auto-resume succeeds
   allowedToInteract = true;
-  assert.equal(yt.attentionResume(), true);
-  assert.equal(yt.getState().isBlinkLocked, false);
-  assert.equal(playbackCalls.at(-1), 'play');
+  assert.equal(yt.attentionResume(), false);
 });
 
-test('auto-resume: DOM overlay shows during attention lock and hides on attentionResume()', () => {
+test('auto-resume: DOM overlay stays hidden until confirmed playback can be sensor-paused', () => {
   runWithDOM(({ root }) => {
     let allowed = true;
     const calls = [];
@@ -462,13 +435,116 @@ test('auto-resume: DOM overlay shows during attention lock and hides on attentio
     assert.ok(overlay);
     assert.equal(overlay.hidden, true);
 
-    // Look away pauses and shows overlay
-    yt.attentionPause({ type: 'look-away', reason: 'head-turned-left' });
-    assert.equal(overlay.hidden, false);
-
-    // Look back auto-resumes and hides overlay
-    assert.equal(yt.attentionResume(), true);
+    // No active player state has been reported, so sensor samples cannot create a lock.
+    assert.equal(yt.attentionPause({ type: 'look-away', reason: 'head-turned-left' }), false);
+    yt.observeAttention({ lookingAtScreen: true, eyesOpen: true, stable: true });
     assert.equal(overlay.hidden, true);
+
+    yt.dispose();
+  });
+});
+
+test('YouTube attention lock recovers on a fresh open gaze, respects manual policy, and blocks late PLAYING', async () => {
+  await runWithDOMAsync(async ({ root }) => {
+    const calls = [];
+    let allowedToInteract = true;
+    let failPlay = false;
+    const guard = new PlaybackGuard({ canInteract: () => allowedToInteract });
+    const playThroughGuard = guard.play.bind(guard);
+    guard.play = () => failPlay ? false : playThroughGuard();
+    let playerEvents;
+    let playerOptions;
+    let ytPlayer;
+    globalThis.YT = {
+      Player: class {
+        constructor(_target, options) {
+          playerEvents = options.events;
+          playerOptions = options;
+          ytPlayer = this;
+          this.pauseVideo = () => calls.push('pause');
+          this.playVideo = () => calls.push('play');
+          this.loadVideoById = () => calls.push('load');
+          this.destroy = () => {};
+        }
+      },
+    };
+    const yt = createYouTube({ canInteract: () => allowedToInteract, guard });
+    yt.mount(root);
+    await Promise.resolve();
+    await Promise.resolve();
+    root.querySelector('[data-yt-grid]').children[0].dispatchEvent({ type: 'click' });
+    assert.equal(yt.getState().videoId, 'jfKfPfyJRdk');
+    assert.equal(yt.getState().suspended, false);
+    assert.equal(playerOptions.playerVars.autoplay, 0);
+    playerEvents.onReady({ target: ytPlayer });
+    assert.equal(yt.getState().ready, true);
+    assert.ok(calls.includes('load'), 'an explicit clip selection made before readiness starts after readiness');
+    calls.length = 0;
+    playerEvents.onStateChange({ data: 1 });
+
+    yt.observeBlink({ closed: true, ear: 0.1 });
+    const overlay = root.querySelector('[data-yt-blink-overlay]');
+    assert.equal(yt.getState().isBlinkLocked, true);
+    assert.equal(overlay.hidden, false);
+    assert.deepEqual(calls, ['pause']);
+
+    // The open-blink callback alone cannot reuse old gaze; a fresh same-frame gaze recovers.
+    yt.observeBlink({ closed: false, ear: 0.3 });
+    assert.equal(yt.getState().isBlinkLocked, true);
+    failPlay = true;
+    yt.observeAttention({ lookingAtScreen: true, eyesOpen: true, stable: true, observedAt: performance.now() });
+    assert.equal(yt.getState().isBlinkLocked, true);
+    assert.equal(overlay.hidden, false);
+    failPlay = false;
+    yt.observeAttention({ lookingAtScreen: true, eyesOpen: true, stable: true, observedAt: performance.now() });
+    assert.equal(yt.getState().isBlinkLocked, false);
+    assert.equal(calls.at(-1), 'play');
+
+    playerEvents.onStateChange({ data: 1 });
+    yt.observeAttention({ lookingAtScreen: false, reason: 'gaze-away', stable: true, eyesOpen: true });
+    assert.equal(yt.getState().isBlinkLocked, true);
+    const beforeLatePlaying = calls.length;
+    playerEvents.onStateChange({ data: 1 });
+    assert.equal(calls.length, beforeLatePlaying + 1);
+    assert.equal(calls.at(-1), 'pause');
+    assert.equal(yt.getState().isBlinkLocked, true);
+    playerEvents.onStateChange({ data: 2 }); // sensor pause confirmation
+
+    yt.setResumePolicy('manual');
+    yt.observeAttention({ lookingAtScreen: true, eyesOpen: true, stable: true, observedAt: performance.now() });
+    assert.equal(yt.getState().isBlinkLocked, true);
+    assert.match(root.querySelector('[data-yt-lock-desc]').textContent, /กดปุ่มด้านล่างหรือ Space/);
+    allowedToInteract = false;
+    const resume = root.querySelector('[data-yt-resume]');
+    resume.dispatchEvent({ type: 'click' });
+    assert.equal(yt.getState().isBlinkLocked, true);
+    assert.equal(overlay.hidden, false);
+    let prevented = false;
+    const blockedSpace = { type: 'keydown', code: 'Space', preventDefault() { prevented = true; } };
+    window.dispatchEvent(blockedSpace);
+    assert.equal(prevented, false);
+    allowedToInteract = true;
+    let inputPrevented = false;
+    window.dispatchEvent({
+      type: 'keydown', code: 'Space', target: { closest: () => ({}) },
+      preventDefault() { inputPrevented = true; },
+    });
+    assert.equal(inputPrevented, false);
+    resume.dispatchEvent({ type: 'click' });
+    assert.equal(yt.getState().isBlinkLocked, false);
+    assert.equal(calls.at(-1), 'play');
+
+    playerEvents.onStateChange({ data: 2 });
+    assert.equal(yt.getState().userPaused, true);
+    playerEvents.onStateChange({ data: 1 });
+    assert.equal(yt.getState().userPaused, false);
+    assert.equal(yt.getState().confirmedPlaying, true);
+
+    yt.observeBlink({ closed: true, ear: 0.1 });
+    let spacePrevented = false;
+    window.dispatchEvent({ type: 'keydown', code: 'Space', preventDefault() { spacePrevented = true; } });
+    assert.equal(spacePrevented, true);
+    assert.equal(yt.getState().isBlinkLocked, false);
 
     yt.dispose();
   });

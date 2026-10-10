@@ -132,15 +132,9 @@ export function createShell({ onTab, onTheme, onOS, onSubtheme, onPanic, onReset
       refs.osButtons[id] = btn;
       listen(btn, 'click', () => {
         if (id && osOptions[id]) {
-          selectedOS = id;
-          document.documentElement.dataset.os = id;
-          const effectiveTheme = selectedSubtheme === 'default' ? id : selectedSubtheme;
-          document.documentElement.dataset.theme = effectiveTheme;
-          updateOSUI(id);
-          onOS?.(id);
-          if (selectedSubtheme === 'default') {
-            onTheme?.(id);
-          }
+          if (onOS) onOS(id);
+          else if (onTheme) onTheme(id);
+          else update({ os: id });
         }
       });
     }
@@ -215,13 +209,9 @@ export function createShell({ onTab, onTheme, onOS, onSubtheme, onPanic, onReset
         setDropdownOpen(false);
         refs.dropdownToggle?.focus();
         if (choice && subthemes[choice]) {
-          selectedSubtheme = choice;
-          document.documentElement.dataset.subtheme = choice;
-          const effectiveTheme = choice === 'default' ? selectedOS : choice;
-          document.documentElement.dataset.theme = effectiveTheme;
-          updateSubthemeUI(choice);
-          onSubtheme?.(choice);
-          onTheme?.(effectiveTheme);
+          if (onSubtheme) onSubtheme(choice);
+          else if (onTheme) onTheme(choice === 'default' ? selectedOS : choice);
+          else update({ subtheme: choice });
         }
       });
     }
@@ -283,9 +273,7 @@ export function createShell({ onTab, onTheme, onOS, onSubtheme, onPanic, onReset
     if (nextSubtheme && subthemes[nextSubtheme]) {
       selectedSubtheme = nextSubtheme;
     }
-    if (!nextTheme) {
-      nextTheme = selectedSubtheme === 'default' ? selectedOS : selectedSubtheme;
-    }
+    nextTheme = selectedSubtheme === 'default' ? selectedOS : selectedSubtheme;
 
     document.documentElement.dataset.os = selectedOS;
     document.documentElement.dataset.subtheme = selectedSubtheme;

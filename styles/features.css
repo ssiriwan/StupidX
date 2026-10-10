@@ -2683,18 +2683,58 @@
   display: none;
 }
 
+/* OS chrome also applies inside the simulated work applications. */
+html[data-os][data-subtheme] .persona-view :is(
+  button, .vsc-menu-item, .vsc-search-bar, .figma-tool, .figma-filename,
+  .jira-link, .jira-pill, .jira-search-input, .kanban-column, .kanban-card
+) {
+  border-radius: var(--radius);
+}
+html[data-os][data-subtheme] :is(.vsc-titlebar, .figma-topbar, .jira-navbar) {
+  font-family: var(--os-font);
+  background: var(--chrome);
+  color: var(--chrome-text);
+  border-color: var(--border);
+}
+html[data-os][data-subtheme] :is(.vsc-menu-item, .vsc-win-ctl, .figma-tool, .figma-filename, .figma-close, .jira-link, .jira-icon-btn, .jira-close) {
+  color: inherit;
+}
+html[data-os][data-subtheme] .figma-filename strong {
+  color: inherit;
+}
+html[data-os="win95"][data-subtheme] :is(.vsc-titlebar, .figma-topbar, .jira-navbar) {
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: inset 1px 1px var(--surface-alt), inset -1px -1px var(--border);
+}
+html[data-os="win95"][data-subtheme] .persona-view button {
+  border: 2px solid var(--border);
+  box-shadow: inset 1px 1px var(--surface-alt), inset -1px -1px var(--border);
+}
+html[data-os="win95"][data-subtheme] .persona-view button:active {
+  box-shadow: inset 1px 1px var(--border), inset -1px -1px var(--surface-alt);
+}
+html[data-os="xp"][data-subtheme] :is(.vsc-titlebar, .figma-topbar, .jira-navbar) {
+  background: linear-gradient(180deg, var(--surface-alt), var(--chrome) 35%);
+  box-shadow: inset 0 1px var(--surface-alt);
+}
+html[data-os][data-subtheme] :is(.figma-tool.active, .jira-link.active) {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 /* ========================================================
    BSOD RETRO THEME ADAPTABILITY (Win95 & XP)
    ======================================================== */
-[data-theme="win95"] .bsod-screen,
-.bsod-screen[data-theme="win95"] {
+[data-os="win95"] .bsod-screen,
+.bsod-screen[data-os="win95"] {
   background-color: #000080;
   font-family: Tahoma, "Courier New", monospace;
   text-align: left;
 }
 
-[data-theme="win95"] .bsod-retro-header,
-.bsod-screen[data-theme="win95"] .bsod-retro-header {
+[data-os="win95"] .bsod-retro-header,
+.bsod-screen[data-os="win95"] .bsod-retro-header {
   display: block;
   width: 100%;
   max-width: 960px;
@@ -2702,8 +2742,8 @@
   margin-bottom: 1rem;
 }
 
-[data-theme="win95"] .bsod-retro-badge,
-.bsod-screen[data-theme="win95"] .bsod-retro-badge {
+[data-os="win95"] .bsod-retro-badge,
+.bsod-screen[data-os="win95"] .bsod-retro-badge {
   background: #c0c0c0;
   color: #000080;
   font-family: Tahoma, Arial, sans-serif;
@@ -2713,26 +2753,26 @@
   box-shadow: inset 1px 1px #ffffff, inset -1px -1px #000000;
 }
 
-[data-theme="win95"] .bsod-container,
-.bsod-screen[data-theme="win95"] .bsod-container {
+[data-os="win95"] .bsod-container,
+.bsod-screen[data-os="win95"] .bsod-container {
   font-family: "Courier New", Courier, monospace, Tahoma;
 }
 
-[data-theme="win95"] .bsod-emoticon,
-.bsod-screen[data-theme="win95"] .bsod-emoticon {
+[data-os="win95"] .bsod-emoticon,
+.bsod-screen[data-os="win95"] .bsod-emoticon {
   font-family: Tahoma, "Segoe UI", sans-serif;
   color: #ffffff;
 }
 
-[data-theme="win95"] .bsod-qr-wrap,
-.bsod-screen[data-theme="win95"] .bsod-qr-wrap {
+[data-os="win95"] .bsod-qr-wrap,
+.bsod-screen[data-os="win95"] .bsod-qr-wrap {
   border: 2px solid #808080;
   box-shadow: inset 1px 1px #000000, 1px 1px #ffffff;
   border-radius: 0;
 }
 
-[data-theme="win95"] .bsod-dismiss-btn,
-.bsod-screen[data-theme="win95"] .bsod-dismiss-btn {
+[data-os="win95"] .bsod-dismiss-btn,
+.bsod-screen[data-os="win95"] .bsod-dismiss-btn {
   background: #c0c0c0;
   color: #000000;
   border: 2px solid #ffffff;
@@ -2744,27 +2784,27 @@
   box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
 }
 
-[data-theme="win95"] .bsod-dismiss-btn:hover,
-.bsod-screen[data-theme="win95"] .bsod-dismiss-btn:hover {
+[data-os="win95"] .bsod-dismiss-btn:hover,
+.bsod-screen[data-os="win95"] .bsod-dismiss-btn:hover {
   background: #d4d4d4;
 }
 
-[data-theme="win95"] .bsod-kbd,
-.bsod-screen[data-theme="win95"] .bsod-kbd {
+[data-os="win95"] .bsod-kbd,
+.bsod-screen[data-os="win95"] .bsod-kbd {
   background: #ffffff;
   color: #000000;
   border: 1px solid #808080;
   border-radius: 0;
 }
 
-[data-theme="xp"] .bsod-screen,
-.bsod-screen[data-theme="xp"] {
+[data-os="xp"] .bsod-screen,
+.bsod-screen[data-os="xp"] {
   background-color: #000080;
   font-family: Tahoma, "Segoe UI", Arial, sans-serif;
 }
 
-[data-theme="xp"] .bsod-dismiss-btn,
-.bsod-screen[data-theme="xp"] .bsod-dismiss-btn {
+[data-os="xp"] .bsod-dismiss-btn,
+.bsod-screen[data-os="xp"] .bsod-dismiss-btn {
   background: linear-gradient(180deg, #338dff 0%, #0060e8 100%);
   border: 1px solid #ffffff;
   border-radius: 4px;
@@ -2772,8 +2812,8 @@
   box-shadow: inset 0 1px #84c0ff, 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="xp"] .bsod-dismiss-btn:hover,
-.bsod-screen[data-theme="xp"] .bsod-dismiss-btn:hover {
+[data-os="xp"] .bsod-dismiss-btn:hover,
+.bsod-screen[data-os="xp"] .bsod-dismiss-btn:hover {
   background: linear-gradient(180deg, #4da0ff 0%, #006bf2 100%);
 }
 

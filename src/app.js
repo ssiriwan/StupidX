@@ -8,6 +8,7 @@ import { createMusic } from './features/music.js';
 import { createBrowserLauncher } from './features/browser.js';
 import { createVision } from './vision/index.js';
 import { createCameraHud } from './vision/hud.js';
+import { loadPreferences, savePreferences, normalizePreferences } from './core/preferences.js';
 
 const root = document.querySelector('#app');
 const returnDialog = document.querySelector('#manual-return-dialog');
@@ -18,9 +19,15 @@ let previousFocus = null;
 let previousScroll = 0;
 let simulation = false;
 let simulatedPerson = false;
+let simulatedLooking = true;
 let visionStatus = 'กล้อง: ยังไม่เปิด · ยังไม่มีข้อมูลเฝ้าระวัง';
 let disposed = false;
 let simLeaveTimer = null;
+let preferenceStorage;
+try { preferenceStorage = globalThis.localStorage; } catch { /* Storage can be disabled. */ }
+const preferences = loadPreferences(preferenceStorage);
+let savedPreferences = JSON.stringify(preferences);
+let renderedResumePolicy;
 const canInteract = (tab) => () => session?.mode === LEISURE && (!tab || session.activeTab === tab);
 const features = {
   youtube: createYouTube({ canInteract: canInteract('youtube') }),
@@ -35,7 +42,6 @@ const bsod = createBsod({
 });
 const shell = createShell({
   onTab: (tab) => session.setTab(tab),
-  onTheme: (theme) => session.setTheme(theme),
   onOS: (os) => session.setOS(os),
   onSubtheme: (subtheme) => session.setSubtheme(subtheme),
   onPanic: () => session.enterWork('manual'),
@@ -96,6 +102,17 @@ function render(state) {
   }
   const cameraRunning = vision?.getStatus()?.running ?? false;
   shell.update({ ...state, status, cameraRunning });
+  if (renderedResumePolicy !== state.resumePolicy) {
+    features.youtube.setResumePolicy(state.resumePolicy);
+    renderedResumePolicy = state.resumePolicy;
+  }
+  const policySelect = shell.refs.settings.querySelector('[data-resume-policy]');
+  if (policySelect) policySelect.value = state.resumePolicy;
+  const nextPreferences = JSON.stringify(normalizePreferences(state));
+  if (nextPreferences !== savedPreferences) {
+    savePreferences(preferenceStorage, state);
+    savedPreferences = nextPreferences;
+  }
   work.update({ canReturn: state.canReturn, unknown: state.unknown });
   if (state.bsod) {
     bsod.show(state.os, state.subtheme);
@@ -136,34 +153,41 @@ function switchSurface(mode) {
 }
 
 session = new SessionController({
+  preferences,
   onMode: switchSurface,
   onChange: render,
   onTab: (tab, previous) => { features[previous].suspend('tab'); features[tab].resume(); },
-  onBlink: () => features.youtube.attentionPause({ type: 'blink', reason: 'กระพริบตา' }),
 });
 for (const [tab, feature] of Object.entries(features)) feature.mount(shell.refs.panels[tab]);
 launcher.mount(shell.refs.launcher);
+
+function observeBlink(observation) {
+  session.observeBlink(observation);
+  features.youtube.observeBlink(observation);
+}
+
+function observeAttention(observation) {
+  features.youtube.observeAttention(observation);
+}
 
 vision = createVision({
   onPerson: (observation) => { if (!simulation) session.observePerson(observation); },
   onBlink: (observation) => {
     if (!simulation) {
-      session.observeBlink(observation);
-      features.youtube.attentionPause({ type: 'blink', reason: 'กระพริบตา' });
+      observeBlink(observation);
     }
   },
   onAttention: (observation) => {
     if (!simulation) {
-      if (observation.lookingAtScreen === false) {
-        features.youtube.attentionPause({ type: 'look-away', reason: observation.reason });
-      } else if (observation.lookingAtScreen === true) {
-        features.youtube.attentionResume();
-      }
+      observeAttention(observation);
     }
   },
   onStatus: (status) => {
     visionStatus = status.text ?? 'กล้อง: ข้อมูลไม่พร้อม';
     hud.updateStatus(status);
+    if (!simulation && (!status.running || !status.camera?.ready || !status.eyes?.ready)) {
+      observeAttention({ lookingAtScreen: null, eyesOpen: false, reason: 'unavailable', observedAt: performance.now() });
+    }
     const stream = vision?.getStream?.();
     if (stream && status.camera?.ready) {
       hud.attachStream(stream, vision?.getVideoElement?.());
@@ -176,7 +200,32 @@ vision = createVision({
 });
 vision.mount(shell.refs.vision);
 
-shell.refs.settings.innerHTML = `<section class="simulation-controls"><h3>โหมดจำลองสำหรับเดโม</h3><p class="muted">ส่งเหตุการณ์ผ่าน controller เดียวกับกล้องจริง · ไม่ใช่การตรวจจับจริง</p><label class="simulation-toggle"><input type="checkbox" data-simulation> เปิดโหมดจำลอง</label><p class="muted" role="status" data-simulation-label></p><div class="simulation-buttons"><button class="button" type="button" data-sim-blink>จำลองกะพริบตา</button><button class="button" type="button" data-sim-lookaway>จำลองละสายตาจากจอ</button><button class="button" type="button" data-sim-person>จำลองคนเข้ามา</button></div><p class="muted">B: เปิดรายงานทันที · Escape: ปิดรายงานเมื่อผ่านเงื่อนไขแล้ว หากข้อมูลกล้องไม่พร้อม ให้กด × และยืนยันด้วยตนเอง</p></section>`;
+shell.refs.settings.innerHTML = `
+  <section class="playback-settings">
+    <h3>เล่นต่อหลังจากกะพริบตาหรือละสายตา</h3>
+    <label for="resume-policy">เมื่อกลับมามองจอ</label>
+    <select id="resume-policy" class="field" data-resume-policy>
+      <option value="auto">เล่นต่ออัตโนมัติ</option>
+      <option value="manual">รอให้กดปุ่มเล่นต่อ</option>
+    </select>
+    <p class="muted">ใช้กับทั้งการกะพริบตาและหันหน้าออก · จดจำการตั้งค่าเมื่อเปิดเว็บครั้งถัดไป</p>
+  </section>
+  <section class="simulation-controls">
+    <h3>โหมดจำลองสำหรับเดโม</h3>
+    <p class="muted">ใช้ขั้นตอนเดียวกับกล้องจริง · ไม่ใช่การตรวจจับจริง</p>
+    <label class="simulation-toggle"><input type="checkbox" data-simulation> เปิดโหมดจำลอง</label>
+    <p class="muted" role="status" data-simulation-label></p>
+    <div class="simulation-buttons">
+      <button class="button" type="button" data-sim-blink>จำลองกะพริบตา</button>
+      <button class="button" type="button" data-sim-lookaway>จำลองละสายตาจากจอ</button>
+      <button class="button" type="button" data-sim-lookback>จำลองกลับมามองจอ</button>
+      <button class="button" type="button" data-sim-person>จำลองคนเข้ามา</button>
+    </div>
+    <p class="muted">B: เปิดรายงานทันที · Escape: ปิดรายงานเมื่อผ่านเงื่อนไขแล้ว หากข้อมูลกล้องไม่พร้อม ให้กด × และยืนยันด้วยตนเอง</p>
+  </section>`;
+shell.refs.settings.querySelector('[data-resume-policy]').addEventListener('change', (event) => {
+  session.setResumePolicy(event.target.value);
+}, options);
 const simToggle = shell.refs.settings.querySelector('[data-simulation]');
 const simPerson = shell.refs.settings.querySelector('[data-sim-person]');
 const simLookaway = shell.refs.settings.querySelector('[data-sim-lookaway]');
@@ -188,20 +237,30 @@ simToggle.addEventListener('change', () => {
   if (session.mode !== LEISURE) return;
   simulation = simToggle.checked;
   simulatedPerson = false;
-  session.observeBlink({ closed: false });
+  simulatedLooking = true;
+  observeBlink({ closed: false, observedAt: performance.now() });
+  observeAttention({ lookingAtScreen: null, eyesOpen: false, reason: 'source-changed', observedAt: performance.now() });
   if (simulation) emitSimulation();
   else session.observePerson({ present: false, available: false, calibrated: false, observedAt: performance.now(), source: 'camera' });
   session.emit();
 }, options);
 shell.refs.settings.querySelector('[data-sim-blink]').addEventListener('click', () => {
   if (!simulation || session.mode !== LEISURE) return;
-  session.observeBlink({ closed: true, source: 'simulation' });
-  session.observeBlink({ closed: false, source: 'simulation' });
-  features.youtube.attentionPause({ type: 'blink', reason: 'กระพริบตา' });
+  observeBlink({ closed: true, source: 'simulation', observedAt: performance.now() });
+  observeAttention({ lookingAtScreen: false, eyesOpen: false, reason: 'eyes-closed', observedAt: performance.now() });
+  observeBlink({ closed: false, source: 'simulation', observedAt: performance.now() });
+  observeAttention({ lookingAtScreen: simulatedLooking, eyesOpen: true, stable: simulatedLooking, reason: simulatedLooking ? 'looking-at-screen' : 'head-turned-left', source: 'simulation', observedAt: performance.now() });
 }, options);
 simLookaway?.addEventListener('click', () => {
   if (!simulation || session.mode !== LEISURE) return;
-  features.youtube.attentionPause({ type: 'look-away', reason: 'head-turned-left' });
+  simulatedLooking = false;
+  observeAttention({ lookingAtScreen: false, eyesOpen: true, stable: true, reason: 'head-turned-left', source: 'simulation', observedAt: performance.now() });
+}, options);
+shell.refs.settings.querySelector('[data-sim-lookback]').addEventListener('click', () => {
+  if (!simulation || session.mode !== LEISURE) return;
+  simulatedLooking = true;
+  observeBlink({ closed: false, source: 'simulation', observedAt: performance.now() });
+  observeAttention({ lookingAtScreen: true, eyesOpen: true, stable: true, source: 'simulation', observedAt: performance.now() });
 }, options);
 simPerson.addEventListener('click', () => {
   if (!simulation || session.mode !== LEISURE) return;
@@ -259,6 +318,7 @@ function reset() {
   if (session.mode !== LEISURE) return;
   clearTimeout(simLeaveTimer); simLeaveTimer = null;
   simulation = false; simulatedPerson = false; simToggle.checked = false;
+  simulatedLooking = true;
   for (const feature of Object.values(features)) feature.suspend('reset');
   for (const feature of Object.values(features)) feature.reset();
   launcher.reset(); vision.reset();

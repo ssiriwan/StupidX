@@ -267,12 +267,24 @@ export class VisionSession {
 
         // Attention / Screen Gaze Tracking
         const attention = checkAttention(primary, this.ear);
-        this.lookingAtScreen = attention.lookingAtScreen;
+        this.lookingAtScreen = attention.lookingAtScreen === true;
         this.attentionReason = attention.reason;
-        const attentionTransition = this.attention.observe(attention.lookingAtScreen, attention.reason);
-        if (attentionTransition) {
-          this.callbacks.onAttention?.({ ...attentionTransition, source: 'camera' });
-        }
+        const qualifiesForAttention = attention.lookingAtScreen === true && attention.eyesOpen === true;
+        const trackedAttention = attention.lookingAtScreen === true && !qualifiesForAttention
+          ? null : attention.lookingAtScreen;
+        const attentionTransition = this.attention.observe(trackedAttention, attention.reason);
+        const stable = trackedAttention === true
+          ? this.attention.lookStreak >= this.attention.consecutiveRequired
+          : trackedAttention === false
+            ? this.attention.awayStreak >= this.attention.consecutiveRequired
+            : false;
+        this.callbacks.onAttention?.({
+          ...attention,
+          stable,
+          transition: Boolean(attentionTransition),
+          observedAt: sample.at,
+          source: 'camera',
+        });
 
         this.publishObservation();
         this.callbacks.onFaceMeshResults?.(results, this.ear, this.blink.closed, attention);
@@ -324,12 +336,18 @@ export class VisionSession {
     if (this.faceObservedAt === null || now - this.faceObservedAt > FRESHNESS_MS) {
       this.blink.reset();
       this.ear = null;
-      const attTransition = this.attention.observe(false, 'no-face');
-      if (attTransition) {
-        this.lookingAtScreen = false;
-        this.attentionReason = 'no-face';
-        this.callbacks.onAttention?.({ ...attTransition, source: 'camera' });
-      }
+      this.attention.observe(false, 'no-face');
+      this.lookingAtScreen = false;
+      this.attentionReason = 'no-face';
+      this.callbacks.onAttention?.({
+        lookingAtScreen: false,
+        reason: 'no-face',
+        eyesOpen: false,
+        stable: this.attention.awayStreak >= this.attention.consecutiveRequired,
+        transition: false,
+        observedAt: now,
+        source: 'camera',
+      });
     }
     const newFrame = this.video.currentTime !== this.lastVideoTime;
     if (this.video.readyState >= 2 && this.video.videoWidth && this.video.videoHeight && !this.video.paused && newFrame) {

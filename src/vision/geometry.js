@@ -1,11 +1,18 @@
+export const EYE_CLOSED_THRESHOLD = 0.18;
+export const EYE_OPEN_THRESHOLD = 0.22;
+
 export function calculateEAR(landmarks) {
   const distance = (a, b) => {
     const p = landmarks[a];
     const q = landmarks[b];
-    return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : NaN;
+    return p && q && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(q.x) && Number.isFinite(q.y)
+      ? Math.hypot(p.x - q.x, p.y - q.y) : NaN;
   };
-  const left = distance(159, 145) / distance(33, 133);
-  const right = distance(386, 374) / distance(362, 263);
+  const leftWidth = distance(33, 133);
+  const rightWidth = distance(362, 263);
+  if (!(leftWidth > 0) || !(rightWidth > 0)) return null;
+  const left = distance(159, 145) / leftWidth;
+  const right = distance(386, 374) / rightWidth;
   const ear = (left + right) / 2;
   return Number.isFinite(ear) && ear >= 0 ? ear : null;
 }
@@ -17,7 +24,7 @@ export function countPeople(predictions, confidence = 0.45) {
 }
 
 export class BlinkTracker {
-  constructor(closeThreshold = 0.18, openThreshold = 0.22) {
+  constructor(closeThreshold = EYE_CLOSED_THRESHOLD, openThreshold = EYE_OPEN_THRESHOLD) {
     this.closeThreshold = closeThreshold;
     this.openThreshold = openThreshold;
     this.reset();
@@ -41,12 +48,26 @@ export class BlinkTracker {
 
 export function checkAttention(landmarks, ear = null) {
   if (!landmarks || landmarks.length === 0) {
-    return { lookingAtScreen: false, reason: 'no-face' };
+    return { lookingAtScreen: false, reason: 'no-face', eyesOpen: false };
+  }
+
+  const pointIsValid = (point) => point && Number.isFinite(point.x) && Number.isFinite(point.y);
+  const required = [1, 10, 33, 133, 152, 263, 362];
+  if (!required.every((index) => pointIsValid(landmarks[index]))) {
+    return { lookingAtScreen: null, reason: 'unknown', eyesOpen: ear === null ? null : ear >= EYE_OPEN_THRESHOLD };
+  }
+
+  if (landmarks.length >= 478 && (!pointIsValid(landmarks[468]) || !pointIsValid(landmarks[473]))) {
+    return { lookingAtScreen: null, reason: 'unknown', eyesOpen: ear === null ? null : ear >= EYE_OPEN_THRESHOLD };
+  }
+
+  if (ear !== null && !Number.isFinite(ear)) {
+    return { lookingAtScreen: null, reason: 'unknown', eyesOpen: null };
   }
 
   // 1. Eye closure / blink
-  if (ear !== null && Number.isFinite(ear) && ear < 0.18) {
-    return { lookingAtScreen: false, reason: 'eyes-closed' };
+  if (ear !== null && ear <= EYE_CLOSED_THRESHOLD) {
+    return { lookingAtScreen: false, reason: 'eyes-closed', eyesOpen: false };
   }
 
   const p = (idx) => landmarks[idx];
@@ -56,9 +77,7 @@ export function checkAttention(landmarks, ear = null) {
   const chin = p(152);
   const forehead = p(10);
 
-  if (!nose || !eyeL || !eyeR) {
-    return { lookingAtScreen: true, reason: 'looking-at-screen' };
-  }
+  const eyesOpen = ear === null ? null : ear >= EYE_OPEN_THRESHOLD;
 
   // 2. Head Yaw (หันซ้าย / หันขวา)
   const dL = Math.hypot(nose.x - eyeL.x, nose.y - eyeL.y);
@@ -67,25 +86,25 @@ export function checkAttention(landmarks, ear = null) {
   if (yawDist > 0.02) {
     const yawRatio = dL / yawDist;
     if (yawRatio < 0.30) {
-      return { lookingAtScreen: false, reason: 'head-turned-left', yawRatio };
+      return { lookingAtScreen: false, reason: 'head-turned-left', yawRatio, eyesOpen };
     }
     if (yawRatio > 0.70) {
-      return { lookingAtScreen: false, reason: 'head-turned-right', yawRatio };
+      return { lookingAtScreen: false, reason: 'head-turned-right', yawRatio, eyesOpen };
     }
   }
 
   // 3. Head Pitch (ก้ม / เงย)
-  if (chin && forehead) {
+  if (pointIsValid(chin) && pointIsValid(forehead)) {
     const dTop = Math.abs(nose.y - forehead.y);
     const dBottom = Math.abs(chin.y - nose.y);
     const pitchDist = dTop + dBottom;
     if (pitchDist > 0.05) {
       const pitchRatio = dTop / pitchDist;
       if (pitchRatio < 0.35) {
-        return { lookingAtScreen: false, reason: 'head-tilted-up', pitchRatio };
+        return { lookingAtScreen: false, reason: 'head-tilted-up', pitchRatio, eyesOpen };
       }
       if (pitchRatio > 0.78) {
-        return { lookingAtScreen: false, reason: 'head-tilted-down', pitchRatio };
+        return { lookingAtScreen: false, reason: 'head-tilted-down', pitchRatio, eyesOpen };
       }
     }
   }
@@ -103,13 +122,13 @@ export function checkAttention(landmarks, ear = null) {
         const irisLH = (landmarks[468].x - minXL) / wL;
         const irisRH = (landmarks[473].x - minXR) / wR;
         if ((irisLH < 0.22 && irisRH < 0.22) || (irisLH > 0.78 && irisRH > 0.78)) {
-          return { lookingAtScreen: false, reason: 'gaze-away' };
+          return { lookingAtScreen: false, reason: 'gaze-away', eyesOpen };
         }
       }
     }
   }
 
-  return { lookingAtScreen: true, reason: 'looking-at-screen' };
+  return { lookingAtScreen: true, reason: 'looking-at-screen', eyesOpen };
 }
 
 export class AttentionTracker {
@@ -127,10 +146,15 @@ export class AttentionTracker {
   }
 
   observe(looking, reason = '') {
+    if (looking !== true && looking !== false) {
+      this.awayStreak = 0;
+      this.lookStreak = 0;
+      return null;
+    }
     if (looking) {
       this.awayStreak = 0;
       this.lookStreak++;
-      if (!this.lookingAtScreen && this.lookStreak >= 1) {
+      if (!this.lookingAtScreen && this.lookStreak >= this.consecutiveRequired) {
         this.lookingAtScreen = true;
         return { lookingAtScreen: true, reason: 'looking-at-screen' };
       }

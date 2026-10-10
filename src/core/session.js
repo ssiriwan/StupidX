@@ -1,10 +1,12 @@
+import { normalizePreferences, OS_OPTIONS, SUBTHEME_OPTIONS, RESUME_POLICIES } from './preferences.js';
+
 export const LEISURE = 'LEISURE';
 export const WORK_LOCKED = 'WORK_LOCKED';
 export const WORK_READY = 'WORK_READY';
 const TABS = new Set(['youtube', 'ai', 'music']);
-export const OS_LIST = new Set(['win11', 'win95', 'xp']);
+export const OS_LIST = OS_OPTIONS;
 export const OS_CHOICES = OS_LIST;
-export const SUBTHEMES = new Set(['default', 'dark', 'gov', 'hi5', 'matrix', 'icu']);
+export const SUBTHEMES = SUBTHEME_OPTIONS;
 export const THEMES = new Set(['win11', 'dark', 'win95', 'xp', 'gov', 'hi5', 'matrix', 'icu']);
 
 export function ignoresShortcut(event) {
@@ -15,13 +17,12 @@ export function ignoresShortcut(event) {
 
 /** No browser or model dependency; every sensor and simulation uses these events. */
 export class SessionController {
-  constructor({ clock = () => performance.now(), freshnessMs = 1500, safeDelay = 2000, onChange = () => {}, onMode = () => {}, onTab = () => {}, onBlink = () => {} } = {}) {
+  constructor({ clock = () => performance.now(), freshnessMs = 1500, safeDelay = 2000, preferences = {}, onChange = () => {}, onMode = () => {}, onTab = () => {}, onBlink = () => {} } = {}) {
     Object.assign(this, { clock, freshnessMs, safeDelay, onChange, onMode, onTab, onBlink });
     this.mode = LEISURE;
     this.activeTab = 'youtube';
-    this.os = 'win11';
-    this.subtheme = 'default';
-    this.theme = 'win11';
+    Object.assign(this, normalizePreferences(preferences));
+    this.theme = this.subtheme === 'default' ? this.os : this.subtheme;
     this.blinkCount = 0;
     this.eyesClosed = false;
     this.observation = null;
@@ -39,7 +40,7 @@ export class SessionController {
     const fresh = this.isFresh();
     return {
       mode: this.mode, activeTab: this.activeTab,
-      os: this.os, subtheme: this.subtheme, theme: this.theme,
+      os: this.os, subtheme: this.subtheme, theme: this.theme, resumePolicy: this.resumePolicy,
       blinkCount: this.blinkCount, eyesClosed: this.eyesClosed,
       fresh, unknown: !fresh, present: fresh && this.observation.present,
       source: this.observation?.source ?? null,
@@ -171,11 +172,19 @@ export class SessionController {
     return true;
   }
 
+  setResumePolicy(policy) {
+    if (this.mode !== LEISURE || !RESUME_POLICIES.has(policy)) return false;
+    this.resumePolicy = policy;
+    this.emit();
+    return true;
+  }
+
   reset() {
     this.activeTab = 'youtube';
     this.os = 'win11';
     this.subtheme = 'default';
     this.theme = 'win11';
+    this.resumePolicy = 'auto';
     this.blinkCount = 0;
     this.eyesClosed = false;
     this.observation = null;

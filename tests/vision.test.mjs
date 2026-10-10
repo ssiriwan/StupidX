@@ -48,6 +48,7 @@ function fixture(overrides = {}) {
   };
   const personEvents = [];
   const blinkEvents = [];
+  const attentionEvents = [];
   const statuses = [];
   const face = {
     onResults(fn) { faceResults = fn; },
@@ -62,6 +63,7 @@ function fixture(overrides = {}) {
     clock: () => now,
     onPerson: (event) => personEvents.push(event),
     onBlink: (event) => blinkEvents.push(event),
+    onAttention: (event) => attentionEvents.push(event),
     onStatus: (state) => statuses.push(state),
   }, {
     video,
@@ -77,7 +79,7 @@ function fixture(overrides = {}) {
     ...overrides,
   });
   return {
-    session, video, face, person, personEvents, blinkEvents, statuses, events, jobs,
+    session, video, face, person, personEvents, blinkEvents, attentionEvents, statuses, events, jobs,
     setFaces(faces) { nextFaces = faces; },
     setPredictions(predictions) { nextPredictions = predictions; },
     at(time, advanceVideo = true) {
@@ -93,6 +95,9 @@ function fixture(overrides = {}) {
 test('GitHub EAR calculation averages the normalized FaceMesh eye ratios', () => {
   assert.ok(Math.abs(calculateEAR(landmarks(0.3)) - 0.3) < 1e-6);
   assert.equal(calculateEAR([]), null);
+  const invalidWidth = landmarks(0.3);
+  invalidWidth[133] = invalidWidth[33];
+  assert.equal(calculateEAR(invalidWidth), null);
 });
 
 test('blink detection requires an open-to-closed transition and uses hysteresis', () => {
@@ -397,6 +402,22 @@ test('checkAttention detects screen attention, eye closure, head turns and gaze 
   const rightRes = checkAttention(turnedRight, 0.3);
   assert.equal(rightRes.lookingAtScreen, false);
   assert.equal(rightRes.reason, 'head-turned-right');
+
+  const invalidFace = landmarks(0.3);
+  invalidFace[1] = { x: NaN, y: 0.4 };
+  assert.deepEqual(checkAttention(invalidFace, 0.3), {
+    lookingAtScreen: null, reason: 'unknown', eyesOpen: true,
+  });
+
+  const tiltedDown = landmarks(0.3);
+  tiltedDown[10] = { x: 0.5, y: 0.1 };
+  tiltedDown[152] = { x: 0.5, y: 0.45 };
+  assert.equal(checkAttention(tiltedDown, 0.3).reason, 'head-tilted-down');
+
+  const lookingFarAway = Array.from({ length: 478 }, (_, index) => normalFace[index] ?? { x: 0.5, y: 0.4 });
+  lookingFarAway[468] = { x: 0.405, y: 0.4 };
+  lookingFarAway[473] = { x: 0.525, y: 0.4 };
+  assert.equal(checkAttention(lookingFarAway, 0.3).reason, 'gaze-away');
 });
 
 test('AttentionTracker uses hysteresis to prevent micro-flicker and reports looking-away transition', () => {
@@ -415,8 +436,67 @@ test('AttentionTracker uses hysteresis to prevent micro-flicker and reports look
   // Repeated looking away does not re-emit
   assert.equal(tracker.observe(false, 'head-turned-left'), null);
 
-  // Looking back restores lookingAtScreen
+  // Looking back is also debounced, preventing a one-frame false recovery.
+  assert.equal(tracker.observe(true), null);
   const back = tracker.observe(true);
   assert.deepEqual(back, { lookingAtScreen: true, reason: 'looking-at-screen' });
   assert.equal(tracker.lookingAtScreen, true);
+});
+
+test('VisionSession reports fresh gaze samples with stable eye-open state for quick blink recovery', async () => {
+  const f = fixture();
+  await f.session.start();
+  await settle();
+
+  f.setFaces([landmarks()]);
+  f.at(33);
+  await settle();
+  assert.equal(f.attentionEvents.at(-1).lookingAtScreen, true);
+  assert.equal(f.attentionEvents.at(-1).eyesOpen, true);
+  assert.equal(f.attentionEvents.at(-1).stable, false);
+  assert.equal(f.attentionEvents.at(-1).observedAt, 33);
+  f.at(66);
+  await settle();
+  assert.equal(f.attentionEvents.at(-1).stable, true);
+
+  const away = landmarks();
+  away[1] = { x: 0.42, y: 0.4 };
+  f.setFaces([away]);
+  f.at(99);
+  await settle();
+  assert.equal(f.attentionEvents.at(-1).stable, false);
+  f.at(132);
+  await settle();
+  assert.equal(f.attentionEvents.at(-1).lookingAtScreen, false);
+  assert.equal(f.attentionEvents.at(-1).stable, true);
+
+  f.setFaces([landmarks(0.1)]);
+  f.at(165);
+  await settle();
+  assert.ok(f.blinkEvents.some((event) => event.closed === true));
+  f.setFaces([landmarks(0.2)]);
+  f.at(198);
+  await settle();
+  assert.equal(f.attentionEvents.at(-1).eyesOpen, false);
+  assert.equal(f.attentionEvents.at(-1).lookingAtScreen, true);
+  assert.equal(f.attentionEvents.at(-1).stable, false);
+  f.setFaces([landmarks()]);
+  f.at(231);
+  await settle();
+  assert.ok(f.blinkEvents.some((event) => event.closed === false));
+  assert.equal(f.attentionEvents.at(-1).stable, false);
+  f.at(264);
+  await settle();
+  assert.equal(f.attentionEvents.at(-1).stable, true);
+
+  f.setFaces([]);
+  f.at(297);
+  await settle();
+  f.at(330);
+  await settle();
+  assert.equal(f.attentionEvents.at(-1).reason, 'no-face');
+  assert.equal(f.attentionEvents.at(-1).eyesOpen, false);
+  assert.equal(f.attentionEvents.at(-1).stable, true);
+
+  f.session.dispose();
 });

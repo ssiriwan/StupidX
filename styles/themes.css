@@ -257,23 +257,15 @@
 /* ========================================================
    WINDOWS 11 FLUENT REFINEMENTS
    ======================================================== */
-[data-theme="win11"] .app-window {
+[data-os="win11"] .app-window {
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(213, 223, 235, 0.8);
 }
-[data-theme="win11"] .button-primary:hover {
-  background: #005fb8;
-  border-color: #005fb8;
-}
-[data-theme="win11"] .tab-strip {
+[data-os="win11"] .tab-strip {
   gap: 3px;
   padding: 4px 6px 0;
 }
-[data-theme="win11"] .app-tab {
+[data-os="win11"] .app-tab {
   transition: background 0.15s ease, color 0.15s ease;
-}
-[data-theme="win11"] .app-tab:hover:not([aria-selected="true"]) {
-  background: #dfe7f1;
 }
 
 /* ========================================================
@@ -289,7 +281,7 @@
   box-shadow: var(--shadow);
 }
 [data-theme="dark"] .field,
-[data-theme="dark"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
+[data-theme="dark"] .settings-grid input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
 [data-theme="dark"] .settings-grid select,
 [data-theme="dark"] textarea {
   background: #18181b;
@@ -433,30 +425,30 @@
 /* ========================================================
    WINDOWS 95 AUTHENTIC STYLING
    ======================================================== */
-[data-theme="win95"] body {
+:root[data-os="win95"][data-subtheme="default"] body {
   background-color: #008080;
   background-image: radial-gradient(#004d4d 15%, transparent 16%);
   background-size: 4px 4px;
 }
-[data-theme="win95"] .leisure-shell {
+:root[data-os="win95"][data-subtheme="default"] .leisure-shell {
   border: 3px solid;
   border-color: #dfdfdf #000000 #000000 #dfdfdf;
   box-shadow: inset 1px 1px #ffffff, inset -1px -1px #808080;
   background: #c0c0c0;
 }
-[data-theme="win95"] .app-header {
+:root[data-os="win95"][data-subtheme="default"] .app-header {
   background: #000080;
   color: #ffffff;
   padding: 6px 12px;
   font-weight: 700;
 }
-[data-theme="win95"] .brand-mark {
+:root[data-os="win95"][data-subtheme="default"] .brand-mark {
   color: #ffffff;
 }
-[data-theme="win95"] .brand-subtitle {
+:root[data-os="win95"][data-subtheme="default"] .brand-subtitle {
   color: #d4d0c8;
 }
-[data-theme="win95"] .watch-status {
+:root[data-os="win95"][data-subtheme="default"] .watch-status {
   background: #c0c0c0;
   color: #000000;
   border: 2px solid;
@@ -464,40 +456,40 @@
   box-shadow: inset 1px 1px #000000, inset -1px -1px #dfdfdf;
   border-radius: 0;
 }
-[data-theme="win95"] .status-dot {
+:root[data-os="win95"][data-subtheme="default"] .status-dot {
   background: #008000;
   border-radius: 0;
 }
-[data-theme="win95"] .theme-picker {
+:root[data-os="win95"][data-subtheme="default"] .theme-picker {
   background: #c0c0c0;
   border: 2px solid;
   border-color: #808080 #ffffff #ffffff #808080;
   border-radius: 0;
 }
-[data-theme="win95"] .theme-button {
+:root[data-os="win95"][data-subtheme="default"] .theme-button {
   border-radius: 0;
   border: 1px solid transparent;
 }
-[data-theme="win95"] .theme-button[aria-pressed="true"] {
+:root[data-os="win95"][data-subtheme="default"] .theme-button[aria-pressed="true"] {
   background: #000080;
   color: #ffffff;
   border: 1px solid #000000;
   box-shadow: inset 1px 1px #5a7fff, inset -1px -1px #000040;
 }
-[data-theme="win95"] .app-window,
-[data-theme="win95"] .settings-drawer,
-[data-theme="win95"] .app-footer,
-[data-theme="win95"] .document-ribbon,
-[data-theme="win95"] .panel {
+:root[data-os="win95"][data-subtheme="default"] .app-window,
+:root[data-os="win95"][data-subtheme="default"] .settings-drawer,
+:root[data-os="win95"][data-subtheme="default"] .app-footer,
+:root[data-os="win95"][data-subtheme="default"] .document-ribbon,
+:root[data-os="win95"][data-subtheme="default"] .panel {
   border: 2px solid;
   border-color: #dfdfdf #000000 #000000 #dfdfdf;
   box-shadow: inset 2px 2px #fff, inset -2px -2px #000;
   border-radius: 0;
 }
-[data-theme="win95"] .button,
-[data-theme="win95"] .camera-button,
-[data-theme="win95"] .hud-button,
-[data-theme="win95"] .panic-button {
+:root[data-os="win95"][data-subtheme="default"] .button,
+:root[data-os="win95"][data-subtheme="default"] .camera-button,
+:root[data-os="win95"][data-subtheme="default"] .hud-button,
+:root[data-os="win95"][data-subtheme="default"] .panic-button {
   border: 2px solid;
   border-color: #ffffff #000000 #000000 #ffffff;
   box-shadow: inset 2px 2px #fff, inset -2px -2px #000;
@@ -505,29 +497,29 @@
   background: #c0c0c0;
   color: #000000;
 }
-[data-theme="win95"] .button:active,
-[data-theme="win95"] .camera-button:active,
-[data-theme="win95"] .hud-button:active,
-[data-theme="win95"] .panic-button:active,
-[data-theme="win95"] .theme-button:active {
+:root[data-os="win95"][data-subtheme="default"] .button:active,
+:root[data-os="win95"][data-subtheme="default"] .camera-button:active,
+:root[data-os="win95"][data-subtheme="default"] .hud-button:active,
+:root[data-os="win95"][data-subtheme="default"] .panic-button:active,
+:root[data-os="win95"][data-subtheme="default"] .theme-button:active {
   border-color: #000000 #ffffff #ffffff #000000;
   box-shadow: inset 2px 2px #000, inset -2px -2px #fff;
 }
-[data-theme="win95"] .button-primary {
+:root[data-os="win95"][data-subtheme="default"] .button-primary {
   font-weight: 700;
   outline: 1px dotted #000000;
   outline-offset: -4px;
 }
-[data-theme="win95"] .panic-button {
+:root[data-os="win95"][data-subtheme="default"] .panic-button {
   background: #c0c0c0;
   color: #800000;
   font-weight: 800;
 }
-[data-theme="win95"] .panic-button:hover {
+:root[data-os="win95"][data-subtheme="default"] .panic-button:hover {
   background: #d4d0c8;
   color: #b00000;
 }
-[data-theme="win95"] .app-tab {
+:root[data-os="win95"][data-subtheme="default"] .app-tab {
   border: 2px solid;
   border-color: #ffffff #000000 #000000 #ffffff;
   border-bottom: 0;
@@ -536,7 +528,7 @@
   background: #c0c0c0;
   color: #000000;
 }
-[data-theme="win95"] .app-tab[aria-selected="true"] {
+:root[data-os="win95"][data-subtheme="default"] .app-tab[aria-selected="true"] {
   background: #c0c0c0;
   color: #000000;
   font-weight: 800;
@@ -545,11 +537,11 @@
   margin-bottom: -1px;
   z-index: 2;
 }
-[data-theme="win95"] .field,
-[data-theme="win95"] .address-field,
-[data-theme="win95"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
-[data-theme="win95"] .settings-grid select,
-[data-theme="win95"] textarea {
+:root[data-os="win95"][data-subtheme="default"] .field,
+:root[data-os="win95"][data-subtheme="default"] .address-field,
+:root[data-os="win95"][data-subtheme="default"] .settings-grid input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+:root[data-os="win95"][data-subtheme="default"] .settings-grid select,
+:root[data-os="win95"][data-subtheme="default"] textarea {
   border: 2px solid;
   border-color: #808080 #ffffff #ffffff #808080;
   box-shadow: inset 2px 2px #000, inset -2px -2px #fff;
@@ -557,19 +549,19 @@
   background: #ffffff;
   color: #000000;
 }
-[data-theme="win95"] .brand h1 {
+:root[data-os="win95"][data-subtheme="default"] .brand h1 {
   letter-spacing: -1.2px;
 }
-[data-theme="win95"] .document-header {
+:root[data-os="win95"][data-subtheme="default"] .document-header {
   background: #000080;
   color: #ffffff;
   padding-block: 7px;
 }
-[data-theme="win95"] .save-status,
-[data-theme="win95"] .document-period {
+:root[data-os="win95"][data-subtheme="default"] .save-status,
+:root[data-os="win95"][data-subtheme="default"] .document-period {
   color: #e1e1e1;
 }
-[data-theme="win95"] .document-close {
+:root[data-os="win95"][data-subtheme="default"] .document-close {
   background: #c0c0c0;
   color: #000000;
   border: 2px solid;
@@ -577,7 +569,7 @@
   box-shadow: inset 1px 1px #fff, inset -1px -1px #000;
   border-radius: 0;
 }
-[data-theme="win95"] .work-view {
+:root[data-os="win95"][data-subtheme="default"] .work-view {
   border: 3px solid;
   border-color: #dfdfdf #000000 #000000 #dfdfdf;
 }
@@ -585,131 +577,131 @@
 /* ========================================================
    WINDOWS XP LUNA STYLING
    ======================================================== */
-[data-theme="xp"] body {
+:root[data-os="xp"][data-subtheme="default"] body {
   background-color: #5a8fed;
   background-image: linear-gradient(to bottom, #3b74e6 0%, #70a4fc 60%, #9bc2fc 100%);
 }
-[data-theme="xp"] .leisure-shell {
+:root[data-os="xp"][data-subtheme="default"] .leisure-shell {
   border: 3px solid #0869ea;
   border-radius: 10px 10px 0 0;
   overflow: hidden;
   box-shadow: 0 0 0 1px #0746b3, 0 8px 24px rgba(7, 60, 143, 0.35);
 }
-[data-theme="xp"] .app-header {
+:root[data-os="xp"][data-subtheme="default"] .app-header {
   background: linear-gradient(to bottom, #1786ff 0%, #0869ea 15%, #0861ed 85%, #0848b9 100%);
   color: #ffffff;
   padding: 16px 20px;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
 }
-[data-theme="xp"] .brand-mark {
+:root[data-os="xp"][data-subtheme="default"] .brand-mark {
   color: #ffffff;
 }
-[data-theme="xp"] .brand-subtitle {
+:root[data-os="xp"][data-subtheme="default"] .brand-subtitle {
   color: #dae8ff;
   text-shadow: none;
 }
-[data-theme="xp"] .watch-status {
+:root[data-os="xp"][data-subtheme="default"] .watch-status {
   color: #ffffff;
   background: linear-gradient(to bottom, #006ef0, #0050bc);
   border: 1px solid #3987f3;
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.35);
 }
-[data-theme="xp"] .status-dot {
+:root[data-os="xp"][data-subtheme="default"] .status-dot {
   background: #3cce4d;
   box-shadow: 0 0 6px #3cce4d;
 }
-[data-theme="xp"] .theme-picker {
+:root[data-os="xp"][data-subtheme="default"] .theme-picker {
   background: #d1e4f7;
   color: #10285b;
   border-color: #6ca2e7;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-[data-theme="xp"] .theme-button[aria-pressed="true"] {
+:root[data-os="xp"][data-subtheme="default"] .theme-button[aria-pressed="true"] {
   background: linear-gradient(to bottom, #4ee35f 0%, #3cce4d 50%, #1f9a2e 100%);
   border-color: #079317;
   color: #ffffff;
   box-shadow: inset 0 1px #a4fca4, 0 1px 2px rgba(0, 0, 0, 0.2);
   font-weight: 700;
 }
-[data-theme="xp"] .tab-strip {
+:root[data-os="xp"][data-subtheme="default"] .tab-strip {
   background: linear-gradient(to bottom, #5ba9ff, #69b5ff);
   padding: 9px 15px 0;
   gap: 3px;
 }
-[data-theme="xp"] .app-tab {
+:root[data-os="xp"][data-subtheme="default"] .app-tab {
   border-radius: 6px 6px 0 0;
   border: 1px solid #4a8cd4;
   border-bottom: 0;
 }
-[data-theme="xp"] .app-tab[aria-selected="true"] {
+:root[data-os="xp"][data-subtheme="default"] .app-tab[aria-selected="true"] {
   border-top: 3px solid #f6a623;
   background: linear-gradient(to bottom, #ffffff, #ece9d8);
   color: #0c2758;
 }
-[data-theme="xp"] .app-window {
+:root[data-os="xp"][data-subtheme="default"] .app-window {
   border-radius: 0;
   border: 1px solid #7f9db9;
   box-shadow: none;
 }
-[data-theme="xp"] .address-bar {
+:root[data-os="xp"][data-subtheme="default"] .address-bar {
   background: linear-gradient(to bottom, #f3f0e5, #ece9d8);
   border-color: #d0cabb;
 }
-[data-theme="xp"] .address-field {
+:root[data-os="xp"][data-subtheme="default"] .address-field {
   border-color: #7f9db9;
   box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.15);
 }
-[data-theme="xp"] .app-footer {
+:root[data-os="xp"][data-subtheme="default"] .app-footer {
   margin: 0;
   border-radius: 0;
   background: linear-gradient(to bottom, #2a6ee8 0%, #1754c7 100%);
   color: #ffffff;
   border-color: #1044ab;
 }
-[data-theme="xp"] .app-footer .blink-counter,
-[data-theme="xp"] .app-footer .footer-note {
+:root[data-os="xp"][data-subtheme="default"] .app-footer .blink-counter,
+:root[data-os="xp"][data-subtheme="default"] .app-footer .footer-note {
   color: #d6e5ff;
   border-color: #3b74e6;
 }
-[data-theme="xp"] .button-primary {
+:root[data-os="xp"][data-subtheme="default"] .button-primary {
   background: linear-gradient(to bottom, #4da4ff 0%, #1e7bf6 50%, #0053cf 100%);
   border-color: #003d99;
   color: #ffffff;
   box-shadow: inset 0 1px #b3d9ff, 0 1px 2px rgba(0, 0, 0, 0.25);
 }
-[data-theme="xp"] .button-primary:hover {
+:root[data-os="xp"][data-subtheme="default"] .button-primary:hover {
   background: linear-gradient(to bottom, #5cb0ff 0%, #2885ff 50%, #005fec 100%);
 }
-[data-theme="xp"] .panic-button {
+:root[data-os="xp"][data-subtheme="default"] .panic-button {
   background: linear-gradient(to bottom, #ffa756 0%, #ea580c 50%, #c2410c 100%);
   border-color: #9a3412;
   color: #ffffff;
   box-shadow: inset 0 1px #ffedd5, 0 1px 3px rgba(0, 0, 0, 0.3);
 }
-[data-theme="xp"] .panic-button:hover {
+:root[data-os="xp"][data-subtheme="default"] .panic-button:hover {
   background: linear-gradient(to bottom, #ffb36b 0%, #f97316 50%, #ea580c 100%);
 }
-[data-theme="xp"] .work-view {
+:root[data-os="xp"][data-subtheme="default"] .work-view {
   border: 3px solid #0869ea;
   border-radius: 8px 8px 0 0;
 }
-[data-theme="xp"] .document-header {
+:root[data-os="xp"][data-subtheme="default"] .document-header {
   background: linear-gradient(to bottom, #2389ff 0%, #0869ea 50%, #0555dd 100%);
   color: #ffffff;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.35);
 }
-[data-theme="xp"] .save-status,
-[data-theme="xp"] .document-period {
+:root[data-os="xp"][data-subtheme="default"] .save-status,
+:root[data-os="xp"][data-subtheme="default"] .document-period {
   color: #edf5ff;
   text-shadow: none;
 }
-[data-theme="xp"] .document-close {
+:root[data-os="xp"][data-subtheme="default"] .document-close {
   color: #ffffff;
   background: linear-gradient(to bottom, #ee8b7b, #d63f27);
   border: 1px solid #ffffff;
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-[data-theme="xp"] .document-close:hover:enabled {
+:root[data-os="xp"][data-subtheme="default"] .document-close:hover:enabled {
   background: linear-gradient(to bottom, #f89787, #e54b33);
 }
 
@@ -2078,7 +2070,7 @@
 }
 
 [data-theme="hi5"] .field,
-[data-theme="hi5"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
+[data-theme="hi5"] .settings-grid input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
 [data-theme="hi5"] .settings-grid select,
 [data-theme="hi5"] textarea {
   border: 2px dotted #ff1493;
@@ -2352,7 +2344,7 @@
 }
 
 [data-theme="matrix"] .field,
-[data-theme="matrix"] .settings-grid input:not([type="checkbox"]):not([type="range"]),
+[data-theme="matrix"] .settings-grid input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
 [data-theme="matrix"] .settings-grid select,
 [data-theme="matrix"] textarea {
   border: 1px solid #003311;
@@ -2417,3 +2409,176 @@
   color: #000000;
 }
 
+
+
+/* OS owns chrome type and geometry; alternative palettes supply its colors. */
+:root[data-os="win11"] {
+  --radius: 12px;
+  --os-font: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--os-font);
+}
+:root[data-os="win95"] {
+  --radius: 0px;
+  --os-font: "MS Sans Serif", Tahoma, Arial, sans-serif;
+  font-family: var(--os-font);
+}
+:root[data-os="xp"] {
+  --radius: 6px;
+  --os-font: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: var(--os-font);
+}
+
+html[data-os] :is(
+  .app-header, .brand, .brand-mark, .brand-subtitle, .watch-status, .header-actions,
+  .os-switcher, .theme-picker, .theme-dropdown-toggle, .theme-dropdown-menu,
+  .theme-button, .app-tab, .tab-strip, .address-bar, .address-field, .address-text,
+  .address-caption, .app-footer, .settings-drawer, .settings-heading, .settings-grid,
+  .camera-hud-window, .hud-header, .hud-status-pill, .hud-start-cam-btn, .hud-button,
+  .hud-btn-min, .work-persona-switcher, .persona-tab-btn, .switcher-close,
+  .document-header, .document-ribbon, .return-dialog, .dialog-actions,
+  button, input, select, textarea
+) { font-family: var(--os-font); }
+html[data-os] :is(.app-header, .settings-drawer, .return-dialog, .work-persona-switcher) * {
+  font-family: var(--os-font);
+}
+
+html[data-os][data-subtheme] :is(button, input, select, textarea, .field, [role="button"], [role="tab"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* :where() keeps palette and selected-state rules easy to override. */
+html[data-os][data-subtheme] :where(
+  .leisure-shell, .app-window, .settings-drawer, .app-footer, .ai-feature, .music-feature,
+  .player-card, .track-button, .yt-card, .yt-thumb-box, .yt-screen, .yt-blink-card,
+  .yt-duration, .yt-pill, .yt-search-input, .yt-search-submit, .yt-resume-btn,
+  .camera-hud-window, .hud-header, .hud-status-pill, .hud-start-cam-btn, .work-view,
+  .work-persona-switcher, .document-ribbon, .panel, .return-dialog, .address-field,
+  .theme-dropdown-toggle, .theme-dropdown-menu, .button, .camera-button, .hud-button,
+  .panic-button, .theme-button, .app-tab, .field, .document-close, .persona-tab-btn,
+  .switcher-close, .hud-btn-min,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  select, textarea
+) { border-radius: var(--radius); }
+html[data-os][data-subtheme] .app-tab[aria-selected="true"] { border-radius: var(--radius); }
+
+/* Alternative Win95 palettes keep their colors while using raised and sunken frames. */
+html[data-os="win95"]:not([data-subtheme="default"]) .leisure-shell {
+  border: 3px solid var(--border);
+  background: var(--desktop);
+  box-shadow: inset 2px 2px var(--surface-alt), inset -2px -2px var(--border);
+}
+html[data-os="win95"]:not([data-subtheme="default"]) :is(
+  .app-window, .settings-drawer, .app-footer, .ai-feature, .music-feature, .player-card,
+  .track-button, .yt-card, .yt-screen, .yt-blink-card, .camera-hud-window, .hud-header,
+  .work-view, .work-persona-switcher, .document-ribbon, .panel, .return-dialog
+) {
+  border: 2px solid var(--border);
+  background-color: var(--surface);
+  box-shadow: inset 2px 2px var(--surface-alt), inset -2px -2px var(--border);
+}
+html[data-os="win95"]:not([data-subtheme="default"]) :is(.app-header, .document-header, .address-bar) {
+  background: var(--chrome);
+  color: var(--chrome-text);
+  border-color: var(--border);
+}
+html[data-os="win95"]:not([data-subtheme="default"]) :is(
+  .button, .camera-button, .hud-button,
+  .hud-start-cam-btn, .yt-pill, .yt-search-submit, .yt-resume-btn,
+  .theme-button, .app-tab, .persona-tab-btn, .switcher-close,
+  .document-close, .hud-btn-min
+) {
+  border: 2px solid var(--border);
+  box-shadow: inset 2px 2px var(--surface-alt), inset -2px -2px var(--border);
+}
+html[data-os="win95"]:not([data-subtheme="default"]) :is(
+  .button:where(:not(.button-primary):not(.panic-button)), .camera-button, .hud-button,
+  .hud-start-cam-btn, .yt-pill:where(:not(.active)),
+  .theme-button:where(:not([aria-pressed="true"])), .app-tab:where(:not([aria-selected="true"])),
+  .persona-tab-btn:where(:not(.active)), .switcher-close, .document-close, .hud-btn-min
+) {
+  background-color: var(--surface-alt);
+  color: var(--text);
+}
+html[data-os="win95"]:not([data-subtheme="default"]) :is(.button, .yt-pill, .yt-resume-btn, .persona-tab-btn):active {
+  box-shadow: inset 2px 2px var(--border), inset -2px -2px var(--surface-alt);
+}
+html[data-os="win95"]:not([data-subtheme="default"]) .app-tab {
+  border-bottom: 0;
+}
+html[data-os="win95"]:not([data-subtheme="default"]) .app-tab[aria-selected="true"] {
+  border-top: 3px solid var(--accent);
+  font-weight: 800;
+}
+html[data-os="win95"]:not([data-subtheme="default"]) .field,
+html[data-os="win95"]:not([data-subtheme="default"]) .address-field,
+html[data-os="win95"]:not([data-subtheme="default"]) .settings-grid input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+html[data-os="win95"]:not([data-subtheme="default"]) .settings-grid select,
+html[data-os="win95"]:not([data-subtheme="default"]) textarea {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: inset 2px 2px var(--border), inset -2px -2px var(--surface-alt);
+}
+html[data-os="win95"]:not([data-subtheme="default"]) .theme-dropdown-menu { background: var(--surface); }
+
+/* Alternative XP palettes retain their colors inside Luna-style glossy frames. */
+html[data-os="xp"]:not([data-subtheme="default"]) .leisure-shell {
+  border: 3px solid var(--accent);
+  border-radius: 10px 10px 0 0;
+  background: var(--desktop);
+  box-shadow: 0 0 0 1px var(--border), var(--shadow);
+}
+html[data-os="xp"]:not([data-subtheme="default"]) :is(.app-header, .document-header) {
+  background: linear-gradient(180deg, var(--surface-alt), var(--accent) 35%, var(--chrome));
+  color: var(--chrome-text);
+  border-color: var(--accent);
+  box-shadow: inset 0 1px var(--surface-alt);
+}
+html[data-os="xp"]:not([data-subtheme="default"]) :is(.app-window, .settings-drawer, .app-footer,
+  .ai-feature, .music-feature, .player-card, .track-button, .yt-card, .yt-screen,
+  .yt-blink-card, .camera-hud-window, .panel, .return-dialog, .document-ribbon) {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+html[data-os="xp"]:not([data-subtheme="default"]) .work-view {
+  border: 3px solid var(--accent);
+  border-radius: 8px 8px 0 0;
+  box-shadow: var(--shadow);
+}
+html[data-os="xp"]:not([data-subtheme="default"]) :is(.address-bar, .app-footer, .work-persona-switcher) {
+  background: var(--chrome);
+  color: var(--chrome-text);
+  border-color: var(--border);
+}
+html[data-os="xp"]:not([data-subtheme="default"]) :is(.app-tab, .persona-tab-btn) {
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  box-shadow: inset 0 1px var(--surface-alt);
+}
+html[data-os="xp"]:not([data-subtheme="default"]) .app-tab[aria-selected="true"] {
+  border-radius: 7px 7px 0 0;
+  border-top: 3px solid var(--accent);
+  background: var(--tab-selected);
+  color: var(--tab-text);
+}
+html[data-os="xp"][data-subtheme] .leisure-shell { border-radius: 10px 10px 0 0; }
+html[data-os="xp"][data-subtheme] .app-window { border-radius: 0; }
+html[data-os="xp"][data-subtheme] .work-view { border-radius: 8px 8px 0 0; }
+html[data-os="xp"][data-subtheme] .app-tab[aria-selected="true"] { border-radius: 7px 7px 0 0; }
+html[data-os="xp"][data-subtheme] .yt-thumb-box { border-radius: var(--radius) var(--radius) 0 0; }
+
+html[data-os="win11"] .app-window { backdrop-filter: blur(20px); }
+html[data-os="win11"][data-subtheme="default"] .app-window { border-color: rgba(213, 223, 235, 0.8); }
+html[data-os="win11"][data-subtheme="default"] .button-primary:hover { background: #005fb8; border-color: #005fb8; }
+html[data-os="win11"] .tab-strip { gap: 3px; padding: 4px 6px 0; }
+html[data-os="win11"] .app-tab { transition: background 0.15s ease, color 0.15s ease; }
+html[data-os="win11"][data-subtheme="default"] .app-tab:hover:not([aria-selected="true"]) { background: #dfe7f1; }
+html[data-os="xp"][data-subtheme="default"] .leisure-shell { border-radius: 10px 10px 0 0; }
+html[data-os="xp"][data-subtheme="default"] .app-header { padding: 16px 20px; }
+html[data-os="xp"][data-subtheme="default"] .tab-strip { padding: 9px 15px 0; gap: 3px; }
+html[data-os="xp"][data-subtheme="default"] .app-window { border-radius: 0; }
+html[data-os="xp"][data-subtheme="default"] .work-view { border-radius: 8px 8px 0 0; }
+html[data-os="xp"][data-subtheme="default"] .app-footer { margin: 0; border-radius: 0; }
+html[data-os="win95"][data-subtheme="default"] .app-header { padding: 6px 12px; font-weight: 700; }
+html[data-os="win95"][data-subtheme="default"] .document-header { padding-block: 7px; }
