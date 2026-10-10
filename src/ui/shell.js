@@ -8,7 +8,7 @@ const tabData = {
 const themes = { win95: 'Windows 95', xp: 'Windows XP', win11: 'Windows 11' };
 
 /** Stable DOM shell. Feature factories mount once into refs.panels. */
-export function createShell({ onTab, onTheme, onPanic, onReset, onSettings } = {}) {
+export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onToggleCamera } = {}) {
   const refs = { leisure: null, panels: {}, vision: null, launcher: null, settings: null, status: null, tabs: {} };
   let mounted = false;
   let selectedTab = 'youtube';
@@ -33,8 +33,11 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings } = {
       <header class="app-header">
         <div class="brand">${sleepyComputer()}<div><h1>ทำงานอยู่ครับ<sup>™</sup></h1><span class="brand-subtitle">TOTALLY WORKING</span></div></div>
         <div class="watch-status"><span class="status-dot" aria-hidden="true"></span><span class="shell-status" role="status">กล้อง: ยังไม่เปิด</span></div>
-        <div class="header-actions"><div class="theme-picker" role="group" aria-label="ธีมหน้าต่าง">${Object.entries(themes).map(([id, label]) => `<button class="theme-button" data-theme-choice="${id}" type="button" aria-pressed="${id === 'win11'}">${icon('windows')}<span>${label}</span></button>`).join('')}</div>
-        <button class="panic-button" data-action="panic" type="button">${icon('briefcase')}<span>ทำงานอยู่ครับ!</span><kbd>B</kbd></button></div>
+        <div class="header-actions">
+          <button class="button camera-button" data-action="toggle-camera" type="button" title="เปิด/ปิดกล้อง">${icon('camera')}<span class="camera-btn-text">เปิดกล้อง AI</span></button>
+          <div class="theme-picker" role="group" aria-label="ธีมหน้าต่าง">${Object.entries(themes).map(([id, label]) => `<button class="theme-button" data-theme-choice="${id}" type="button" aria-pressed="${id === 'win11'}">${icon('windows')}<span>${label}</span></button>`).join('')}</div>
+          <button class="panic-button" data-action="panic" type="button">${icon('briefcase')}<span>ทำงานอยู่ครับ!</span><kbd>B</kbd></button>
+        </div>
       </header>
       <main class="app-window">
         <div class="tab-strip" role="tablist" aria-label="กิจกรรม">${Object.entries(tabData).map(([id, data]) => `<button id="tab-${id}" class="app-tab" type="button" role="tab" aria-controls="panel-${id}" aria-selected="${id === 'youtube'}" tabindex="${id === 'youtube' ? '0' : '-1'}" data-tab="${id}">${icon(data.icon)}<span>${data.title}</span></button>`).join('')}</div>
@@ -70,12 +73,18 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings } = {
     listen(leisure.querySelector('[data-action="panic"]'), 'click', () => onPanic?.());
     listen(leisure.querySelector('[data-action="reset"]'), 'click', () => onReset?.());
     listen(leisure.querySelector('[data-action="settings"]'), 'click', () => setSettings(!settingsOpen));
+    const camBtn = leisure.querySelector('[data-action="toggle-camera"]');
+    if (camBtn) listen(camBtn, 'click', () => onToggleCamera?.());
     update({ activeTab: selectedTab, theme: document.documentElement.dataset.theme || 'win11' });
   }
-  function update({ activeTab, theme, status, blinkCount } = {}) {
+  function update({ activeTab, theme, status, blinkCount, cameraRunning } = {}) {
     if (theme && themes[theme]) document.documentElement.dataset.theme = theme;
     else if (!document.documentElement.dataset.theme) document.documentElement.dataset.theme = 'win11';
     if (!mounted) return;
+    if (cameraRunning !== undefined) {
+      const camLabel = refs.leisure?.querySelector('.camera-btn-text');
+      if (camLabel) camLabel.textContent = cameraRunning ? 'ปิดกล้อง AI' : 'เปิดกล้อง AI';
+    }
     if (activeTab && tabData[activeTab]) {
       selectedTab = activeTab;
       for (const id of Object.keys(tabData)) {

@@ -62,9 +62,10 @@ svg { display: block; }
 .address-text { font-size: 15px; font-weight: 550; }
 .address-caption { margin-left: auto; font-size: 12px; color: var(--muted); }
 .feature-stage { background: var(--surface); }
-.feature-panel { min-height: 530px; }
 .settings-drawer { padding: 24px; background: var(--surface-alt); border-bottom: 1px solid var(--border); }
-.settings-heading { display: flex; align-items: flex-start; gap: 20px; justify-content: space-between; margin-bottom: 20px; }
+.settings-drawer[hidden] { display: block !important; visibility: hidden !important; position: absolute !important; top: -9999px !important; left: -9999px !important; pointer-events: none !important; height: 0 !important; overflow: hidden !important; }
+.camera-button { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 6px 12px; background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; color: var(--text); transition: all 0.15s ease; }
+.camera-button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 .settings-heading h2 { margin: 0 0 6px; font-size: 23px; }
 .settings-heading p { margin: 0; font-size: 13px; }
 .settings-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 24px; }

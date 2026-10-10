@@ -25,12 +25,18 @@ const features = {
   ai: createAI({ canInteract: canInteract('ai') }),
   music: createMusic({ canInteract: canInteract('music') }),
 };
+let vision;
 const launcher = createBrowserLauncher({ canInteract: canInteract() });
 const shell = createShell({
   onTab: (tab) => session.setTab(tab),
   onTheme: (theme) => session.setTheme(theme),
   onPanic: () => session.enterWork('manual'),
   onReset: reset,
+  onToggleCamera: () => {
+    const st = vision?.getStatus();
+    if (st?.running) vision?.stop();
+    else void vision?.start();
+  },
 });
 const work = createWorkView({ onReturn: () => requestReturn(true) });
 shell.mount(root);
@@ -40,7 +46,8 @@ function render(state) {
   let status;
   if (simulation) status = `จำลองชัดเจน: ${state.present ? 'ตรวจพบคนเพิ่ม' : state.unknown ? 'ข้อมูลยังไม่พร้อม' : 'ไม่พบคนเพิ่ม'}`;
   else status = state.fresh ? (state.present ? 'ตรวจพบคนหรือใบหน้าเพิ่ม' : 'กล้องพร้อม · ไม่พบคนเพิ่ม') : visionStatus;
-  shell.update({ ...state, status });
+  const cameraRunning = vision?.getStatus()?.running ?? false;
+  shell.update({ ...state, status, cameraRunning });
   work.update({ canReturn: state.canReturn, unknown: state.unknown });
   if (state.present && returnDialog.open) returnDialog.close();
   const label = shell.refs.settings.querySelector('[data-simulation-label]');
@@ -83,7 +90,7 @@ session = new SessionController({
 for (const [tab, feature] of Object.entries(features)) feature.mount(shell.refs.panels[tab]);
 launcher.mount(shell.refs.launcher);
 
-const vision = createVision({
+vision = createVision({
   onPerson: (observation) => { if (!simulation) session.observePerson(observation); },
   onBlink: (observation) => { if (!simulation) session.observeBlink(observation); },
   onStatus: (status) => { visionStatus = status.text ?? 'กล้อง: ข้อมูลไม่พร้อม'; session.emit(); },

@@ -10,6 +10,7 @@ const paths = {
   reset: '<path d="M3 10a9 9 0 1 1 1 8M3 3v7h7"/>',
   arrow: '<path d="m14 5-7 7 7 7"/>',
   windows: '<path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" fill="currentColor" stroke="none"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
 };
 
 export function icon(name, className = '') {
