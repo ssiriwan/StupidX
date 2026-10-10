@@ -6,6 +6,7 @@ import { createAI } from './features/ai.js';
 import { createMusic } from './features/music.js';
 import { createBrowserLauncher } from './features/browser.js';
 import { createVision } from './vision/index.js';
+import { createCameraHud } from './vision/hud.js';
 
 const root = document.querySelector('#app');
 const returnDialog = document.querySelector('#manual-return-dialog');
@@ -26,6 +27,7 @@ const features = {
   music: createMusic({ canInteract: canInteract('music') }),
 };
 let vision;
+const hud = createCameraHud();
 const launcher = createBrowserLauncher({ canInteract: canInteract() });
 const shell = createShell({
   onTab: (tab) => session.setTab(tab),
@@ -34,13 +36,20 @@ const shell = createShell({
   onReset: reset,
   onToggleCamera: () => {
     const st = vision?.getStatus();
-    if (st?.running) vision?.stop();
-    else void vision?.start();
+    if (st?.running) {
+      vision?.stop();
+      hud.detachStream();
+    } else {
+      hud.show();
+      void vision?.start();
+    }
   },
+  onToggleHud: () => hud.toggleVisibility(),
 });
 const work = createWorkView({ onReturn: () => requestReturn(true) });
 shell.mount(root);
 work.mount(root);
+hud.mount(document.body);
 
 function render(state) {
   let status;
@@ -94,6 +103,9 @@ vision = createVision({
   onPerson: (observation) => { if (!simulation) session.observePerson(observation); },
   onBlink: (observation) => { if (!simulation) session.observeBlink(observation); },
   onStatus: (status) => { visionStatus = status.text ?? 'กล้อง: ข้อมูลไม่พร้อม'; session.emit(); },
+  onStreamReady: (stream) => hud.attachStream(stream),
+  onFaceMeshResults: (results, ear, closed) => hud.drawFaceMesh(results, ear, closed),
+  onPersonResults: (predictions, count) => hud.drawPredictions(predictions, count),
 });
 vision.mount(shell.refs.vision);
 

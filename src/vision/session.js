@@ -5,7 +5,7 @@ const PERSON_CONFIDENCE = 0.45;
 const PERSON_INTERVAL_MS = 300;
 
 export class VisionSession {
-  constructor({ onPerson = () => {}, onBlink = () => {}, onStatus = () => {}, clock = () => performance.now() } = {}, {
+  constructor({ onPerson = () => {}, onBlink = () => {}, onStatus = () => {}, onFaceMeshResults = () => {}, onPersonResults = () => {}, onStreamReady = () => {}, clock = () => performance.now() } = {}, {
     video, mediaDevices = globalThis.navigator?.mediaDevices, timers = globalThis,
     loadFace, loadPerson = null,
   } = {}) {
@@ -14,7 +14,7 @@ export class VisionSession {
     this.timers = timers;
     this.loadFace = loadFace;
     this.loadPerson = loadPerson;
-    this.callbacks = { onPerson, onBlink, onStatus };
+    this.callbacks = { onPerson, onBlink, onStatus, onFaceMeshResults, onPersonResults, onStreamReady };
     this.clock = clock;
     this.epoch = 0;
     this.revision = 0;
@@ -135,6 +135,7 @@ export class VisionSession {
       if (!this.valid(token)) { stream.getTracks().forEach((track) => track.stop()); return; }
       this.stream = stream;
       this.video.srcObject = stream;
+      this.callbacks.onStreamReady?.(stream);
       stream.getTracks().forEach((track) => {
         const ended = () => {
           if (this.running && this.stream === stream) {
@@ -200,6 +201,7 @@ export class VisionSession {
           if (transition) this.callbacks.onBlink({ ...transition, source: 'camera' });
         }
         this.publishObservation();
+        this.callbacks.onFaceMeshResults?.(results, this.ear, this.blink.closed);
       });
       this.eyesState = 'ready';
       this.publish();
@@ -301,6 +303,7 @@ export class VisionSession {
       this.personObservedAt = at;
       this.publishObservation(true);
       this.publish();
+      this.callbacks.onPersonResults?.(predictions, this.personCount);
     } catch (error) {
       if (this.valid(token) && revision === this.revision && this.person === model) {
         this.personState = 'error';

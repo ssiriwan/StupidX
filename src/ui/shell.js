@@ -8,7 +8,7 @@ const tabData = {
 const themes = { win95: 'Windows 95', xp: 'Windows XP', win11: 'Windows 11' };
 
 /** Stable DOM shell. Feature factories mount once into refs.panels. */
-export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onToggleCamera } = {}) {
+export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onToggleCamera, onToggleHud } = {}) {
   const refs = { leisure: null, panels: {}, vision: null, launcher: null, settings: null, status: null, tabs: {} };
   let mounted = false;
   let selectedTab = 'youtube';
@@ -35,6 +35,7 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onTo
         <div class="watch-status"><span class="status-dot" aria-hidden="true"></span><span class="shell-status" role="status">กล้อง: ยังไม่เปิด</span></div>
         <div class="header-actions">
           <button class="button camera-button" data-action="toggle-camera" type="button" title="เปิด/ปิดกล้อง">${icon('camera')}<span class="camera-btn-text">เปิดกล้อง AI</span></button>
+          <button class="button hud-button" data-action="toggle-hud" type="button" title="เปิด/ปิดจอเรดาร์ส่องหลัง">${icon('bot')}<span>จอเรดาร์ AI</span></button>
           <div class="theme-picker" role="group" aria-label="ธีมหน้าต่าง">${Object.entries(themes).map(([id, label]) => `<button class="theme-button" data-theme-choice="${id}" type="button" aria-pressed="${id === 'win11'}">${icon('windows')}<span>${label}</span></button>`).join('')}</div>
           <button class="panic-button" data-action="panic" type="button">${icon('briefcase')}<span>ทำงานอยู่ครับ!</span><kbd>B</kbd></button>
         </div>
@@ -75,6 +76,8 @@ export function createShell({ onTab, onTheme, onPanic, onReset, onSettings, onTo
     listen(leisure.querySelector('[data-action="settings"]'), 'click', () => setSettings(!settingsOpen));
     const camBtn = leisure.querySelector('[data-action="toggle-camera"]');
     if (camBtn) listen(camBtn, 'click', () => onToggleCamera?.());
+    const hudBtn = leisure.querySelector('[data-action="toggle-hud"]');
+    if (hudBtn) listen(hudBtn, 'click', () => onToggleHud?.());
     update({ activeTab: selectedTab, theme: document.documentElement.dataset.theme || 'win11' });
   }
   function update({ activeTab, theme, status, blinkCount, cameraRunning } = {}) {

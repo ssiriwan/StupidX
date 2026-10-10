@@ -480,3 +480,160 @@
   font-size: 10px;
   color: var(--muted);
 }
+
+/* ========================================================
+   FLOATING WEBCAM RADAR HUD WINDOW
+   ======================================================== */
+.camera-hud-window {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 290px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  z-index: 990;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.camera-hud-window.minimized .hud-body {
+  display: none;
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.hud-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  animation: pulse 1.5s infinite;
+}
+
+.hud-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.hud-btn-min {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.hud-btn-min:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.hud-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #0b131f;
+  overflow: hidden;
+}
+
+.hud-viewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  opacity: 0.9;
+}
+
+.hud-viewport canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+.hud-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 19, 31, 0.9);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
+
+.hud-overlay small {
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--text);
+}
+
+.hud-telemetry {
+  padding: 8px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-family: monospace;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-stat-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+.hud-stat-row strong {
+  color: var(--text);
+}
+
+.hud-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text);
+  transition: all 0.15s ease;
+}
+.hud-button:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
