@@ -38,6 +38,44 @@ svg { display: block; }
 .watch-status { display: flex; align-items: center; gap: 9px; border: 1px solid #d4e4d8; border-radius: var(--radius); background: #e7f4e9; padding: 9px 13px; color: #295a38; font-size: 13px; max-width: 340px; }
 .status-dot { width: 9px; height: 9px; background: #78957f; border-radius: 50%; flex-shrink: 0; }
 .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.os-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  gap: 3px;
+  box-shadow: var(--button-shadow);
+}
+.os-button {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.os-button:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+.os-button[aria-pressed="true"],
+.os-button.active {
+  background: var(--surface);
+  color: var(--accent);
+  border-color: var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 750;
+}
 .theme-picker {
   position: relative;
   display: inline-flex;
@@ -85,6 +123,7 @@ svg { display: block; }
   flex-shrink: 0;
   box-shadow: 0 1px 2px #00000025;
 }
+.theme-swatch-default { background: linear-gradient(135deg, #096bf2, #10b981); }
 .theme-swatch-win11 { background: linear-gradient(135deg, #096bf2, #60a5fa); }
 .theme-swatch-dark { background: linear-gradient(135deg, #0f172a, #334155); border: 1px solid #64748b; }
 .theme-swatch-win95 { background: #c0c0c0; border: 1px solid #454545; }
@@ -156,7 +195,9 @@ svg { display: block; }
 }
 
 /* Theme-specific dropdown overrides */
+[data-os="win95"] .theme-picker,
 [data-theme="win95"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-os="win95"] .theme-dropdown-toggle,
 [data-theme="win95"] .theme-dropdown-toggle {
   background: #c0c0c0;
   border: 2px solid;
@@ -166,10 +207,12 @@ svg { display: block; }
   color: #000000;
   font-family: inherit;
 }
+[data-os="win95"] .theme-dropdown-toggle:active,
 [data-theme="win95"] .theme-dropdown-toggle:active {
   border-color: #808080 #ffffff #ffffff #808080;
   box-shadow: inset 1px 1px #000000;
 }
+[data-os="win95"] .theme-dropdown-menu,
 [data-theme="win95"] .theme-dropdown-menu {
   background: #c0c0c0;
   border: 2px solid;
@@ -178,13 +221,16 @@ svg { display: block; }
   box-shadow: 2px 2px 0 #000000;
 }
 
+[data-os="xp"] .theme-picker,
 [data-theme="xp"] .theme-picker { padding: 0; border: none; background: transparent; box-shadow: none; }
+[data-os="xp"] .theme-dropdown-toggle,
 [data-theme="xp"] .theme-dropdown-toggle {
   background: linear-gradient(to bottom, #ffffff, #ece9d8);
   border-color: #7f9db9;
   border-radius: 4px;
   color: #0c2758;
 }
+[data-os="xp"] .theme-dropdown-menu,
 [data-theme="xp"] .theme-dropdown-menu {
   background: #ffffff;
   border: 2px solid #0869ea;
@@ -192,31 +238,39 @@ svg { display: block; }
   box-shadow: 0 4px 14px rgba(7, 60, 143, 0.25);
 }
 
+[data-subtheme="dark"] .theme-picker,
 [data-theme="dark"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-subtheme="dark"] .theme-dropdown-toggle,
 [data-theme="dark"] .theme-dropdown-toggle {
   background: #18181b;
   border-color: #3f3f46;
   color: #f4f4f5;
 }
+[data-subtheme="dark"] .theme-dropdown-menu,
 [data-theme="dark"] .theme-dropdown-menu {
   background: #18181b;
   border-color: #3f3f46;
 }
 
+[data-subtheme="gov"] .theme-picker,
 [data-theme="gov"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-subtheme="gov"] .theme-dropdown-toggle,
 [data-theme="gov"] .theme-dropdown-toggle {
   background: #fdfbf7;
   border-color: #c59b27;
   color: #0b2545;
   border-radius: 0;
 }
+[data-subtheme="gov"] .theme-dropdown-menu,
 [data-theme="gov"] .theme-dropdown-menu {
   background: #fdfbf7;
   border: 2px solid #c59b27;
   border-radius: 0;
 }
 
+[data-subtheme="hi5"] .theme-picker,
 [data-theme="hi5"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-subtheme="hi5"] .theme-dropdown-toggle,
 [data-theme="hi5"] .theme-dropdown-toggle {
   background: #1d0326;
   border-color: #ff1493;
@@ -224,6 +278,7 @@ svg { display: block; }
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(255, 20, 147, 0.4);
 }
+[data-subtheme="hi5"] .theme-dropdown-menu,
 [data-theme="hi5"] .theme-dropdown-menu {
   background: #1d0326;
   border: 2px solid #ff1493;
@@ -231,7 +286,9 @@ svg { display: block; }
   box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
 }
 
+[data-subtheme="matrix"] .theme-picker,
 [data-theme="matrix"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-subtheme="matrix"] .theme-dropdown-toggle,
 [data-theme="matrix"] .theme-dropdown-toggle {
   background: #050d08;
   border-color: #00ff66;
@@ -239,6 +296,7 @@ svg { display: block; }
   border-radius: 0;
   box-shadow: 0 0 8px rgba(0, 255, 102, 0.25);
 }
+[data-subtheme="matrix"] .theme-dropdown-menu,
 [data-theme="matrix"] .theme-dropdown-menu {
   background: #050d08;
   border: 1px solid #00ff66;
@@ -246,7 +304,9 @@ svg { display: block; }
   box-shadow: 0 0 20px rgba(0, 255, 102, 0.35);
 }
 
+[data-subtheme="icu"] .theme-picker,
 [data-theme="icu"] .theme-picker { padding: 0; border: none; background: transparent; }
+[data-subtheme="icu"] .theme-dropdown-toggle,
 [data-theme="icu"] .theme-dropdown-toggle {
   background: #08121a;
   border-color: #00e67666;
@@ -254,6 +314,7 @@ svg { display: block; }
   border-radius: 3px;
   box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
 }
+[data-subtheme="icu"] .theme-dropdown-menu,
 [data-theme="icu"] .theme-dropdown-menu {
   background: #08121a;
   border: 1px solid #00e676;

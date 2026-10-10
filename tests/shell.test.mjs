@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createShell } from '../src/ui/shell.js';
+import { createShell, osOptions, subthemes, themes } from '../src/ui/shell.js';
 
 class MockClassList {
   constructor(node) {
@@ -272,39 +272,60 @@ function runWithDOM(fn) {
   }
 }
 
-test('createShell mounts theme picker with all 8 themes', () => {
+test('createShell mounts both OS Switcher and Sub-theme Dropdown', () => {
   runWithDOM(({ root }) => {
     const shell = createShell();
     shell.mount(root);
 
+    // 1. Verify OS Switcher mounting
+    const osSwitcher = root.querySelector('.os-switcher');
+    assert.ok(osSwitcher, 'os-switcher element mounted');
+    assert.equal(osSwitcher.getAttribute('role'), 'group');
+
+    const osButtons = root.querySelectorAll('[data-os-choice]');
+    assert.equal(osButtons.length, 3, 'All 3 OS choices present');
+
+    const expectedOS = {
+      win95: '💾 Win 95',
+      xp: '🍀 Win XP',
+      win11: '🪟 Win 11',
+    };
+    for (const [id, label] of Object.entries(expectedOS)) {
+      const btn = root.querySelector(`[data-os-choice="${id}"]`);
+      assert.ok(btn, `OS button for ${id} exists`);
+      assert.ok(btn.textContent.includes(label), `OS button ${id} includes label "${label}"`);
+    }
+
+    const defaultOSBtn = root.querySelector('[data-os-choice="win11"]');
+    assert.equal(defaultOSBtn.getAttribute('aria-pressed'), 'true');
+    assert.ok(defaultOSBtn.classList.contains('active'));
+
+    // 2. Verify Sub-theme Dropdown mounting
     const themePicker = root.querySelector('.theme-picker');
-    assert.ok(themePicker, 'theme-picker element mounted');
+    assert.ok(themePicker, 'theme-picker (subtheme picker) element mounted');
 
     const dropdownToggle = root.querySelector('.theme-dropdown-toggle');
     assert.ok(dropdownToggle, 'theme-dropdown-toggle element mounted');
     assert.equal(dropdownToggle.getAttribute('aria-expanded'), 'false');
 
     const currentLabel = root.querySelector('.theme-current-label');
-    assert.equal(currentLabel.textContent, 'Windows 11');
+    assert.equal(currentLabel.textContent, subthemes.default);
 
-    const themeButtons = root.querySelectorAll('[data-theme-choice]');
-    assert.equal(themeButtons.length, 8, 'All 8 themes present in the picker');
+    const subthemeButtons = root.querySelectorAll('[data-subtheme-choice]');
+    assert.equal(subthemeButtons.length, 6, 'All 6 subthemes present in dropdown');
 
-    const expectedThemes = {
-      win11: 'Windows 11',
+    const expectedSubthemes = {
+      default: 'คลาสสิก (Original)',
       dark: 'Dark Mode',
-      win95: 'Windows 95',
-      xp: 'Windows XP',
-      gov: 'ราชการไทย 1.0',
+      gov: 'ราชการไทย 1.0 (e-GP)',
       hi5: 'Hi5 Y2K (2005)',
       matrix: 'Matrix 1999',
       icu: 'ICU Monitor',
     };
-
-    for (const [id, label] of Object.entries(expectedThemes)) {
-      const btn = root.querySelector(`[data-theme-choice="${id}"]`);
-      assert.ok(btn, `Theme button for ${id} exists`);
-      assert.ok(btn.textContent.includes(label), `Theme button ${id} includes label "${label}"`);
+    for (const [id, label] of Object.entries(expectedSubthemes)) {
+      const btn = root.querySelector(`[data-subtheme-choice="${id}"]`);
+      assert.ok(btn, `Sub-theme button for ${id} exists`);
+      assert.ok(btn.textContent.includes(label), `Sub-theme button ${id} includes label "${label}"`);
     }
 
     shell.dispose();
@@ -343,47 +364,76 @@ test('dropdown opens and closes on toggle click and outside click', () => {
   });
 });
 
-test('clicking each of the 8 theme buttons switches dataset.theme and invokes onTheme callback', () => {
+test('clicking OS buttons dispatches onOS and updates document.documentElement.dataset.os', () => {
   runWithDOM(({ root, document }) => {
-    const selectedThemes = [];
+    const selectedOSList = [];
     const shell = createShell({
-      onTheme: (theme) => selectedThemes.push(theme),
+      onOS: (os) => selectedOSList.push(os),
     });
     shell.mount(root);
 
-    const allThemes = [
+    const testOS = ['win95', 'xp', 'win11'];
+    for (const id of testOS) {
+      const btn = root.querySelector(`[data-os-choice="${id}"]`);
+      assert.ok(btn, `Button for ${id} exists`);
+      btn.click();
+
+      assert.equal(document.documentElement.dataset.os, id, `dataset.os should be updated to ${id}`);
+      assert.equal(btn.getAttribute('aria-pressed'), 'true', `active OS button has aria-pressed="true"`);
+      assert.ok(btn.classList.contains('active'), `active OS button has active class`);
+
+      const otherButtons = root.querySelectorAll('[data-os-choice]').filter(b => b.dataset.osChoice !== id);
+      for (const other of otherButtons) {
+        assert.equal(other.getAttribute('aria-pressed'), 'false');
+        assert.equal(other.classList.contains('active'), false);
+      }
+    }
+
+    assert.deepEqual(selectedOSList, ['win95', 'xp', 'win11']);
+    shell.dispose();
+  });
+});
+
+test('clicking Sub-theme buttons dispatches onSubtheme and updates document.documentElement.dataset.subtheme', () => {
+  runWithDOM(({ root, document }) => {
+    const selectedSubthemes = [];
+    const shell = createShell({
+      onSubtheme: (sub) => selectedSubthemes.push(sub),
+    });
+    shell.mount(root);
+
+    const subList = [
       { id: 'dark', label: 'Dark Mode' },
-      { id: 'win95', label: 'Windows 95' },
-      { id: 'xp', label: 'Windows XP' },
-      { id: 'gov', label: 'ราชการไทย 1.0' },
+      { id: 'gov', label: 'ราชการไทย 1.0 (e-GP)' },
       { id: 'hi5', label: 'Hi5 Y2K (2005)' },
       { id: 'matrix', label: 'Matrix 1999' },
       { id: 'icu', label: 'ICU Monitor' },
-      { id: 'win11', label: 'Windows 11' },
+      { id: 'default', label: 'คลาสสิก (Original)' },
     ];
 
     const currentLabel = root.querySelector('.theme-current-label');
 
-    for (const { id, label } of allThemes) {
-      const btn = root.querySelector(`[data-theme-choice="${id}"]`);
+    for (const { id, label } of subList) {
+      const btn = root.querySelector(`[data-subtheme-choice="${id}"]`);
+      assert.ok(btn, `Subtheme button ${id} exists`);
       btn.click();
 
-      assert.equal(document.documentElement.dataset.theme, id, `dataset.theme should be ${id}`);
+      assert.equal(document.documentElement.dataset.subtheme, id, `dataset.subtheme should be ${id}`);
       assert.equal(currentLabel.textContent, label, `current label should display ${label}`);
-      assert.equal(btn.getAttribute('aria-pressed'), 'true', `active button should have aria-pressed="true"`);
+      assert.equal(btn.getAttribute('aria-pressed'), 'true', `active subtheme has aria-pressed="true"`);
 
-      const otherButtons = root.querySelectorAll(`[data-theme-choice]`).filter(b => b.dataset.themeChoice !== id);
+      const otherButtons = root.querySelectorAll('[data-subtheme-choice]').filter(b => b.dataset.subthemeChoice !== id);
       for (const other of otherButtons) {
         assert.equal(other.getAttribute('aria-pressed'), 'false');
       }
     }
 
-    assert.deepEqual(selectedThemes, ['dark', 'win95', 'xp', 'gov', 'hi5', 'matrix', 'icu', 'win11']);
+    assert.deepEqual(selectedSubthemes, ['dark', 'gov', 'hi5', 'matrix', 'icu', 'default']);
     shell.dispose();
   });
 });
 
-test('shell.update({ theme }) updates document.documentElement.dataset.theme and UI state', () => {
+test('shell.update({ os, subtheme, theme }) updates DOM datasets and UI state for both OS and Subtheme', () => {
   runWithDOM(({ root, document }) => {
     const shell = createShell();
     shell.mount(root);
@@ -391,23 +441,35 @@ test('shell.update({ theme }) updates document.documentElement.dataset.theme and
     const currentLabel = root.querySelector('.theme-current-label');
     const triggerSwatch = root.querySelector('.theme-swatch');
 
-    shell.update({ theme: 'matrix' });
+    // Update with both os and subtheme
+    shell.update({ os: 'xp', subtheme: 'matrix' });
+    assert.equal(document.documentElement.dataset.os, 'xp');
+    assert.equal(document.documentElement.dataset.subtheme, 'matrix');
     assert.equal(document.documentElement.dataset.theme, 'matrix');
+    assert.equal(root.querySelector('[data-os-choice="xp"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(root.querySelector('[data-os-choice="win11"]').getAttribute('aria-pressed'), 'false');
     assert.equal(currentLabel.textContent, 'Matrix 1999');
     assert.ok(triggerSwatch.classList.contains('theme-swatch-matrix'));
-    assert.equal(root.querySelector('[data-theme-choice="matrix"]').getAttribute('aria-pressed'), 'true');
-    assert.equal(root.querySelector('[data-theme-choice="win11"]').getAttribute('aria-pressed'), 'false');
+    assert.equal(root.querySelector('[data-subtheme-choice="matrix"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(root.querySelector('[data-subtheme-choice="default"]').getAttribute('aria-pressed'), 'false');
 
-    shell.update({ theme: 'icu' });
+    // Update with win95 and icu
+    shell.update({ os: 'win95', subtheme: 'icu' });
+    assert.equal(document.documentElement.dataset.os, 'win95');
+    assert.equal(document.documentElement.dataset.subtheme, 'icu');
     assert.equal(document.documentElement.dataset.theme, 'icu');
+    assert.equal(root.querySelector('[data-os-choice="win95"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(root.querySelector('[data-os-choice="xp"]').getAttribute('aria-pressed'), 'false');
     assert.equal(currentLabel.textContent, 'ICU Monitor');
     assert.ok(triggerSwatch.classList.contains('theme-swatch-icu'));
-    assert.equal(root.querySelector('[data-theme-choice="icu"]').getAttribute('aria-pressed'), 'true');
 
+    // Backward compatibility: update with legacy theme name
     shell.update({ theme: 'gov' });
+    assert.equal(document.documentElement.dataset.subtheme, 'gov');
     assert.equal(document.documentElement.dataset.theme, 'gov');
-    assert.equal(currentLabel.textContent, 'ราชการไทย 1.0');
+    assert.equal(currentLabel.textContent, 'ราชการไทย 1.0 (e-GP)');
 
     shell.dispose();
   });
 });
+

@@ -1,4 +1,4 @@
-/** Authentic Blue Screen of Death (BSOD) emergency screen with full retro and modern theme support */
+/** Authentic Blue Screen of Death (BSOD) emergency screen with full OS and subtheme support */
 export function createBSOD({
   onDismiss = () => {},
   timers = globalThis,
@@ -7,13 +7,27 @@ export function createBSOD({
   maxProgress = 89,
   stayStuck = false,
   theme = 'win11',
+  os = 'win11',
+  subtheme = 'default',
 } = {}) {
   let element = null;
   let mounted = false;
   let showing = false;
   let progress = initialProgress;
+  let currentOS = os;
+  let currentSubtheme = subtheme;
   let currentTheme = theme;
   let timerId = null;
+
+  // Resolve initial theme vs OS/subtheme if theme was explicitly passed
+  if (theme && theme !== 'win11') {
+    if (['win11', 'win95', 'xp'].includes(theme)) {
+      currentOS = theme;
+      currentSubtheme = 'default';
+    } else {
+      currentSubtheme = theme;
+    }
+  }
 
   function stopTimer() {
     if (timerId !== null) {
@@ -37,12 +51,16 @@ export function createBSOD({
   }
 
   function renderHTML() {
+    const isRetro = currentOS === 'win95' || currentOS === 'xp';
+    const osBadgeText = currentOS === 'win95' ? ' Windows 95 ' : currentOS === 'xp' ? ' Windows XP ' : ' Windows ';
+
     return `
-      <div class="bsod-container">
+      <div class="bsod-container bsod-${currentOS} bsod-sub-${currentSubtheme}">
         <button class="bsod-hidden-spot" type="button" aria-label="Bypass error" tabindex="-1"></button>
         <div class="bsod-retro-header">
-          <span class="bsod-retro-badge"> Windows </span>
+          <span class="bsod-retro-badge">${osBadgeText}</span>
         </div>
+        <div class="bsod-subtheme-badge" hidden></div>
         <div class="bsod-emoticon" role="button" tabindex="0" aria-label="Restart notice">:(</div>
         <div class="bsod-message">
           <p class="bsod-text-th">คอมพิวเตอร์ของคุณมีปัญหาและจำเป็นต้องรีสตาร์ท เรากำลังรวบรวมข้อมูลข้อผิดพลาดให้คุณ</p>
@@ -111,6 +129,41 @@ export function createBSOD({
     }
   }
 
+  function updateAppearance() {
+    if (!element) return;
+    element.dataset.os = currentOS;
+    element.dataset.subtheme = currentSubtheme;
+    element.dataset.theme = currentTheme || (currentSubtheme === 'default' ? currentOS : currentSubtheme);
+
+    const container = element.querySelector('.bsod-container');
+    if (container) {
+      container.className = `bsod-container bsod-${currentOS} bsod-sub-${currentSubtheme}`;
+    }
+
+    const badge = element.querySelector('.bsod-retro-badge');
+    if (badge) {
+      badge.textContent = currentOS === 'win95' ? ' Windows 95 ' : currentOS === 'xp' ? ' Windows XP ' : ' Windows ';
+    }
+
+    const subBadge = element.querySelector('.bsod-subtheme-badge');
+    if (subBadge) {
+      const subLabels = {
+        matrix: 'SYSTEM FAILURE · MATRIX CODE DISRUPTED 0x00FF',
+        icu: 'ICU CRITICAL MONITOR · VITAL SIGNS FLATLINE',
+        gov: 'ระบบจัดซื้อจัดจ้างภาครัฐ (e-GP) ขัดข้องชั่วคราว',
+        hi5: 'Hi5 Profile Crash · Error 404 Glitter Not Found',
+        dark: 'SYSTEM DIAGNOSTICS · DARK CONSOLE',
+      };
+      if (subLabels[currentSubtheme]) {
+        subBadge.textContent = subLabels[currentSubtheme];
+        subBadge.hidden = false;
+      } else {
+        subBadge.hidden = true;
+        subBadge.textContent = '';
+      }
+    }
+  }
+
   function mount(root) {
     if (mounted) return;
     mounted = true;
@@ -123,8 +176,11 @@ export function createBSOD({
     element.tabIndex = -1;
     element.hidden = true;
     element.inert = true;
-    element.dataset.theme = currentTheme;
+    element.dataset.os = currentOS;
+    element.dataset.subtheme = currentSubtheme;
+    element.dataset.theme = currentTheme || (currentSubtheme === 'default' ? currentOS : currentSubtheme);
     element.innerHTML = renderHTML();
+    updateAppearance();
 
     const hiddenSpot = element.querySelector('.bsod-hidden-spot');
     if (hiddenSpot) {
@@ -152,8 +208,27 @@ export function createBSOD({
     root.append(element);
   }
 
-  function show(newTheme) {
-    if (newTheme) setTheme(newTheme);
+  function show(osOrTheme, newSubtheme) {
+    if (typeof osOrTheme === 'object' && osOrTheme !== null) {
+      if (osOrTheme.os) currentOS = osOrTheme.os;
+      if (osOrTheme.subtheme) currentSubtheme = osOrTheme.subtheme;
+      if (osOrTheme.theme) currentTheme = osOrTheme.theme;
+      updateAppearance();
+    } else {
+      if (osOrTheme) {
+        if (['win11', 'win95', 'xp'].includes(osOrTheme)) {
+          currentOS = osOrTheme;
+        } else {
+          currentTheme = osOrTheme;
+          currentSubtheme = osOrTheme;
+        }
+      }
+      if (newSubtheme) {
+        currentSubtheme = newSubtheme;
+      }
+      currentTheme = currentSubtheme === 'default' ? currentOS : currentSubtheme;
+      updateAppearance();
+    }
     if (!element) return;
     showing = true;
     element.hidden = false;
@@ -183,11 +258,32 @@ export function createBSOD({
     return progress;
   }
 
-  function setTheme(newTheme) {
-    currentTheme = newTheme;
-    if (element) {
-      element.dataset.theme = newTheme;
+  function setOS(newOS) {
+    if (newOS) {
+      currentOS = newOS;
+      currentTheme = currentSubtheme === 'default' ? currentOS : currentSubtheme;
+      updateAppearance();
     }
+  }
+
+  function setSubtheme(newSubtheme) {
+    if (newSubtheme) {
+      currentSubtheme = newSubtheme;
+      currentTheme = currentSubtheme === 'default' ? currentOS : currentSubtheme;
+      updateAppearance();
+    }
+  }
+
+  function setTheme(newTheme) {
+    if (!newTheme) return;
+    currentTheme = newTheme;
+    if (['win11', 'win95', 'xp'].includes(newTheme)) {
+      currentOS = newTheme;
+      currentSubtheme = 'default';
+    } else {
+      currentSubtheme = newTheme;
+    }
+    updateAppearance();
   }
 
   function dispose() {
@@ -207,6 +303,10 @@ export function createBSOD({
     isVisible,
     getProgress,
     setTheme,
+    setOS,
+    setSubtheme,
+    getOS: () => currentOS,
+    getSubtheme: () => currentSubtheme,
     dismiss,
     dispose,
     get element() {

@@ -2777,6 +2777,91 @@
   background: linear-gradient(180deg, #4da0ff 0%, #006bf2 100%);
 }
 
+/* BSOD OS and subtheme adaptability */
+.bsod-subtheme-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+}
+
+[data-os="win95"] .bsod-screen,
+.bsod-screen[data-os="win95"] {
+  background-color: #000080;
+  font-family: Tahoma, "Courier New", monospace;
+}
+
+[data-os="xp"] .bsod-screen,
+.bsod-screen[data-os="xp"] {
+  background-color: #000080;
+  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+}
+
+[data-os="win11"] .bsod-screen,
+.bsod-screen[data-os="win11"] {
+  background-color: #0078d7;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+[data-subtheme="dark"] .bsod-screen,
+.bsod-screen[data-subtheme="dark"] {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-subtheme="gov"] .bsod-screen,
+.bsod-screen[data-subtheme="gov"] {
+  background-color: #133b70 !important;
+  color: #ffd700 !important;
+}
+
+[data-subtheme="hi5"] .bsod-screen,
+.bsod-screen[data-subtheme="hi5"] {
+  background-color: #2b001a !important;
+  color: #ff69b4 !important;
+}
+
+[data-subtheme="matrix"] .bsod-screen,
+.bsod-screen[data-subtheme="matrix"] {
+  background-color: #020702 !important;
+  color: #00ff66 !important;
+  font-family: "Courier New", Courier, monospace !important;
+  text-shadow: 0 0 5px #00ff66;
+}
+
+[data-subtheme="matrix"] .bsod-screen .bsod-qr rect[fill="#ffffff"],
+.bsod-screen[data-subtheme="matrix"] .bsod-qr rect[fill="#ffffff"] {
+  fill: #020702 !important;
+}
+[data-subtheme="matrix"] .bsod-screen .bsod-qr rect[fill="#0078d7"],
+.bsod-screen[data-subtheme="matrix"] .bsod-qr rect[fill="#0078d7"] {
+  fill: #00ff66 !important;
+}
+
+[data-subtheme="icu"] .bsod-screen,
+.bsod-screen[data-subtheme="icu"] {
+  background-color: #05080c !important;
+  color: #00e676 !important;
+  font-family: "Lucida Console", Monaco, monospace !important;
+  text-shadow: 0 0 5px #00e676;
+}
+
+[data-subtheme="icu"] .bsod-screen .bsod-qr rect[fill="#ffffff"],
+.bsod-screen[data-subtheme="icu"] .bsod-qr rect[fill="#ffffff"] {
+  fill: #05080c !important;
+}
+[data-subtheme="icu"] .bsod-screen .bsod-qr rect[fill="#0078d7"],
+.bsod-screen[data-subtheme="icu"] .bsod-qr rect[fill="#0078d7"] {
+  fill: #00e676 !important;
+}
+
+
 @media (max-width: 600px) {
   .bsod-footer-grid {
     flex-direction: column;

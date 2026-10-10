@@ -240,3 +240,112 @@ test('Boss panic hotkey controller simulates b, F8, Escape, and ignores shortcut
   simulateKey('Escape');
   assert.equal(session.mode, LEISURE);
 });
+
+test('setOS(os) validates valid OSes, rejects invalid OSes, and rejects in work mode', () => {
+  const { session } = setup();
+  assert.equal(session.os, 'win11');
+  assert.equal(session.snapshot().os, 'win11');
+  assert.equal(session.subtheme, 'default');
+  assert.equal(session.snapshot().subtheme, 'default');
+
+  const validOSes = ['win95', 'xp', 'win11'];
+  for (const os of validOSes) {
+    assert.equal(session.setOS(os), true);
+    assert.equal(session.os, os);
+    assert.equal(session.snapshot().os, os);
+  }
+
+  for (const invalid of ['macos', 'linux', 'win10', 'windows98', '', null, undefined, 123]) {
+    assert.equal(session.setOS(invalid), false);
+    assert.equal(session.os, 'win11');
+    assert.equal(session.snapshot().os, 'win11');
+  }
+
+  session.setOS('win95');
+  assert.equal(session.theme, 'win95');
+  session.setOS('xp');
+  assert.equal(session.theme, 'xp');
+  session.setOS('win11');
+  assert.equal(session.theme, 'win11');
+
+  session.enterWork('manual');
+  assert.notEqual(session.mode, LEISURE);
+  assert.equal(session.setOS('win95'), false);
+  assert.equal(session.os, 'win11');
+  assert.equal(session.snapshot().os, 'win11');
+});
+
+test('setSubtheme(subtheme) validates valid subthemes, rejects invalid subthemes, and rejects in work mode', () => {
+  const { session } = setup();
+  assert.equal(session.subtheme, 'default');
+  assert.equal(session.snapshot().subtheme, 'default');
+
+  const validSubthemes = ['default', 'dark', 'gov', 'hi5', 'matrix', 'icu'];
+  for (const sub of validSubthemes) {
+    assert.equal(session.setSubtheme(sub), true);
+    assert.equal(session.subtheme, sub);
+    assert.equal(session.snapshot().subtheme, sub);
+  }
+
+  session.setSubtheme('matrix');
+  assert.equal(session.theme, 'matrix');
+  session.setSubtheme('default');
+  assert.equal(session.theme, session.os);
+
+  for (const invalid of ['neon', 'cyberpunk', 'retro', 'win11', '', null, undefined, 42]) {
+    assert.equal(session.setSubtheme(invalid), false);
+    assert.equal(session.subtheme, 'default');
+    assert.equal(session.snapshot().subtheme, 'default');
+  }
+
+  session.enterWork('manual');
+  assert.notEqual(session.mode, LEISURE);
+  assert.equal(session.setSubtheme('dark'), false);
+  assert.equal(session.subtheme, 'default');
+  assert.equal(session.snapshot().subtheme, 'default');
+});
+
+test('OS and subtheme state preservation across modes and reset', () => {
+  const { time, session, person } = setup();
+
+  assert.equal(session.setOS('xp'), true);
+  assert.equal(session.setSubtheme('hi5'), true);
+  assert.equal(session.os, 'xp');
+  assert.equal(session.subtheme, 'hi5');
+  assert.equal(session.snapshot().os, 'xp');
+  assert.equal(session.snapshot().subtheme, 'hi5');
+
+  person(true);
+  assert.equal(session.mode, WORK_LOCKED);
+  assert.equal(session.os, 'xp');
+  assert.equal(session.subtheme, 'hi5');
+  assert.equal(session.snapshot().os, 'xp');
+  assert.equal(session.snapshot().subtheme, 'hi5');
+
+  assert.equal(session.setOS('win95'), false);
+  assert.equal(session.setSubtheme('matrix'), false);
+  assert.equal(session.os, 'xp');
+  assert.equal(session.subtheme, 'hi5');
+
+  person(false);
+  time.advance(1000);
+  person(false);
+  time.advance(1000);
+  person(false);
+  assert.equal(session.mode, WORK_READY);
+  assert.equal(session.requestReturn(), true);
+  assert.equal(session.mode, LEISURE);
+
+  assert.equal(session.os, 'xp');
+  assert.equal(session.subtheme, 'hi5');
+  assert.equal(session.snapshot().os, 'xp');
+  assert.equal(session.snapshot().subtheme, 'hi5');
+
+  session.reset();
+  assert.equal(session.os, 'win11');
+  assert.equal(session.subtheme, 'default');
+  assert.equal(session.theme, 'win11');
+  assert.equal(session.snapshot().os, 'win11');
+  assert.equal(session.snapshot().subtheme, 'default');
+});
+

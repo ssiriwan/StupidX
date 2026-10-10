@@ -2,6 +2,9 @@ export const LEISURE = 'LEISURE';
 export const WORK_LOCKED = 'WORK_LOCKED';
 export const WORK_READY = 'WORK_READY';
 const TABS = new Set(['youtube', 'ai', 'music']);
+export const OS_LIST = new Set(['win11', 'win95', 'xp']);
+export const OS_CHOICES = OS_LIST;
+export const SUBTHEMES = new Set(['default', 'dark', 'gov', 'hi5', 'matrix', 'icu']);
 export const THEMES = new Set(['win11', 'dark', 'win95', 'xp', 'gov', 'hi5', 'matrix', 'icu']);
 
 export function ignoresShortcut(event) {
@@ -16,6 +19,8 @@ export class SessionController {
     Object.assign(this, { clock, freshnessMs, safeDelay, onChange, onMode, onTab, onBlink });
     this.mode = LEISURE;
     this.activeTab = 'youtube';
+    this.os = 'win11';
+    this.subtheme = 'default';
     this.theme = 'win11';
     this.blinkCount = 0;
     this.eyesClosed = false;
@@ -33,7 +38,8 @@ export class SessionController {
   snapshot() {
     const fresh = this.isFresh();
     return {
-      mode: this.mode, activeTab: this.activeTab, theme: this.theme,
+      mode: this.mode, activeTab: this.activeTab,
+      os: this.os, subtheme: this.subtheme, theme: this.theme,
       blinkCount: this.blinkCount, eyesClosed: this.eyesClosed,
       fresh, unknown: !fresh, present: fresh && this.observation.present,
       source: this.observation?.source ?? null,
@@ -136,15 +142,39 @@ export class SessionController {
     return true;
   }
 
+  setOS(os) {
+    if (this.mode !== LEISURE || !OS_LIST.has(os)) return false;
+    this.os = os;
+    this.theme = this.subtheme === 'default' ? this.os : this.subtheme;
+    this.emit();
+    return true;
+  }
+
+  setSubtheme(subtheme) {
+    if (this.mode !== LEISURE || !SUBTHEMES.has(subtheme)) return false;
+    this.subtheme = subtheme;
+    this.theme = this.subtheme === 'default' ? this.os : this.subtheme;
+    this.emit();
+    return true;
+  }
+
   setTheme(theme) {
-    if (this.mode !== LEISURE || !THEMES.has(theme)) return false;
-    this.theme = theme;
+    if (this.mode !== LEISURE || (!THEMES.has(theme) && !SUBTHEMES.has(theme))) return false;
+    if (OS_LIST.has(theme)) {
+      this.os = theme;
+      this.subtheme = 'default';
+    } else if (SUBTHEMES.has(theme)) {
+      this.subtheme = theme;
+    }
+    this.theme = this.subtheme === 'default' ? this.os : this.subtheme;
     this.emit();
     return true;
   }
 
   reset() {
     this.activeTab = 'youtube';
+    this.os = 'win11';
+    this.subtheme = 'default';
     this.theme = 'win11';
     this.blinkCount = 0;
     this.eyesClosed = false;

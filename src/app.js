@@ -36,6 +36,8 @@ const bsod = createBsod({
 const shell = createShell({
   onTab: (tab) => session.setTab(tab),
   onTheme: (theme) => session.setTheme(theme),
+  onOS: (os) => session.setOS(os),
+  onSubtheme: (subtheme) => session.setSubtheme(subtheme),
   onPanic: () => session.enterWork('manual'),
   onReset: reset,
   onToggleCamera: () => {
@@ -96,7 +98,7 @@ function render(state) {
   shell.update({ ...state, status, cameraRunning });
   work.update({ canReturn: state.canReturn, unknown: state.unknown });
   if (state.bsod) {
-    bsod.show(state.theme);
+    bsod.show(state.os, state.subtheme);
   } else {
     bsod.hide();
   }
