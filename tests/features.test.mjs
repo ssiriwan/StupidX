@@ -164,9 +164,10 @@ test('playlist advances automatically and wraps while staying silent', () => {
   const time = fakeClock();
   const music = createMusicModel(time);
   music.resume();
-  music.selectTrack(2);
+  const lastIndex = TRACKS.length - 1;
+  music.selectTrack(lastIndex);
   music.togglePlay();
-  time.advance(TRACKS[2].duration * 1000 + 500);
+  time.advance(TRACKS[lastIndex].duration * 1000 + 500);
   assert.equal(music.getState().trackIndex, 0);
   assert.equal(music.getState().elapsed, .5);
   music.dispose();
@@ -206,20 +207,30 @@ test('challenge timeout and cancel preserve old volume; lower levels have shorte
   const music = createMusicModel(time);
   music.resume();
   music.setLibrary(true);
+  // Volume decrease from 35 to 10 is instant without challenge
   music.requestVolume(10);
-  music.startChallenge();
+  assert.equal(music.getState().volume, 10);
+  // Volume increase from 10 to 90 triggers challenge
+  music.requestVolume(90);
+  assert.equal(music.getState().volume, 10);
+  assert.equal(music.getState().requestedVolume, 90);
+  assert.equal(music.startChallenge(), true);
   time.advance(10000);
-  assert.equal(music.getState().volume, 35);
+  assert.equal(music.getState().volume, 10);
+  assert.equal(music.getState().requestedVolume, 10);
   assert.equal(music.getState().challenge, null);
   assert.match(music.getState().feedback, /หมดเวลา/);
+  music.requestVolume(90);
+  assert.equal(music.startChallenge(), true);
+  music.cancelChallenge();
+  assert.equal(music.getState().volume, 10);
+  assert.equal(music.getState().requestedVolume, 10);
+  music.requestVolume(90);
   assert.equal(music.startChallenge(), true);
   music.setChallengeDraft(music.getState().challenge.phrase);
   assert.equal(music.submitChallenge(), true);
-  assert.equal(music.getState().volume, 10);
-  music.requestVolume(90);
-  music.startChallenge();
-  music.cancelChallenge();
-  assert.equal(music.getState().volume, 10);
+  assert.equal(music.getState().volume, 90);
+  assert.equal(music.getState().requestedVolume, 90);
   music.dispose();
 });
 

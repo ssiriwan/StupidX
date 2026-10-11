@@ -3,7 +3,7 @@ import { icon, sleepyComputer } from './icons.js';
 const tabData = {
   youtube: { title: 'YouTube', icon: 'play', address: 'youtube.com', caption: 'คุณกะพริบ เราหยุด' },
   ai: { title: 'AI ขี้เกียจ', icon: 'bot', address: 'ai.local', caption: 'ถามได้ ไม่รับปาก' },
-  music: { title: 'เพลงเงียบ', icon: 'music', address: 'music.local', caption: 'ดังได้ เงียบด้วย' },
+  music: { title: 'Stupid music', icon: 'music', address: 'stupid-music.local', caption: 'ดังได้ เงียบด้วย' },
 };
 
 export const themes = {

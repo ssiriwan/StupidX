@@ -524,6 +524,15 @@ svg { display: block; }
   justify-content: center;
   user-select: none;
   cursor: default;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bsod-screen::-webkit-scrollbar,
+.bsod-container::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .bsod-screen[hidden] {
@@ -543,6 +552,8 @@ svg { display: block; }
   padding: 8vw 12vw;
   box-sizing: border-box;
   overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .bsod-win11 .bsod-sad {
@@ -644,6 +655,8 @@ svg { display: block; }
   padding: 40px;
   box-sizing: border-box;
   overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .bsod-win95-content {
@@ -694,6 +707,8 @@ svg { display: block; }
   font-size: clamp(12px, 1.5vw, 16px);
   line-height: 1.6;
   overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .bsod-xp-content {

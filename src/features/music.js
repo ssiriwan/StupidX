@@ -8,7 +8,7 @@ export function createMusicModel({ clock = () => performance.now(), timers, onCh
   let lastTick = clock();
   let disposed = false;
   const options = { clock, timers };
-  const initial = (suspended) => ({ suspended, playing: false, trackIndex: 0, elapsed: 0, volume: 35, requestedVolume: 35, library: false, challenge: null, feedback: 'เงียบแบบมีคุณภาพ พร้อมให้บริการ' });
+  const initial = (suspended) => ({ suspended, playing: false, trackIndex: 0, elapsed: 0, volume: 35, requestedVolume: 35, library: true, challenge: null, feedback: 'โหมดห้องสมุดเปิดอยู่เสมอ: เพิ่มเสียงต้องพิมพ์ให้ดัง!' });
   state = initial(true);
   const interactive = () => !disposed && !state.suspended;
   const getState = () => ({ ...state, track: { ...TRACKS[state.trackIndex] }, challenge: state.challenge ? { ...state.challenge, remaining: challengeTimer?.remaining ?? 0 } : null });
@@ -39,13 +39,29 @@ export function createMusicModel({ clock = () => performance.now(), timers, onCh
     }, 250, options);
   }
   function finishChallenge(success, feedback) {
-    if (success) state.volume = state.challenge.target;
+    if (success) {
+      state.volume = state.challenge.target;
+    } else {
+      // Revert requested volume back to the original confirmed volume
+      state.requestedVolume = state.volume;
+    }
     state.challenge = null;
     state.feedback = feedback;
     challengeTimer?.cancel();
     challengeTimer = null;
     emit();
     syncTick();
+  }
+  function triggerChallenge(targetVolume) {
+    state.challenge = { target: targetVolume, phrase: volumePhrase(targetVolume), draft: '' };
+    state.feedback = 'พิมพ์ให้ตรงกับข้อความ ภายใน 10 วินาที เพื่อเพิ่มเสียง!';
+    challengeTimer = new PausableTimer(() => {
+      challengeTimer = null;
+      finishChallenge(false, 'หมดเวลา · คงระดับเดิมไว้ ลองใหม่ได้');
+    }, 10000, options);
+    emit();
+    syncTick();
+    return true;
   }
   return {
     getState,
@@ -65,29 +81,36 @@ export function createMusicModel({ clock = () => performance.now(), timers, onCh
     },
     nextTrack() { this.selectTrack((state.trackIndex + 1) % TRACKS.length); },
     setLibrary(value) {
+      // Library mode is always enforced, cannot be turned off
       if (!interactive() || state.challenge) return;
-      state.library = Boolean(value);
+      state.library = true;
       state.requestedVolume = state.volume;
-      state.feedback = state.library ? 'โหมดห้องสมุด: พิมพ์ให้ดัง ภายใน 10 วินาที' : 'เพิ่มความเงียบได้ตามสบาย';
+      state.feedback = 'โหมดห้องสมุดเปิดอยู่เสมอ: ไม่สามารถปิดได้!';
       emit();
     },
     requestVolume(value) {
       if (!interactive() || state.challenge) return;
-      state.requestedVolume = clampVolume(value);
-      if (!state.library) state.volume = state.requestedVolume;
-      emit();
+      const target = clampVolume(value);
+      state.requestedVolume = target;
+      if (target <= state.volume) {
+        // Reducing or maintaining volume is instant without typing challenge
+        state.volume = target;
+        state.feedback = `ลดเสียงลงเหลือ ${target}% เรียบร้อย (ไม่ต้องพิมพ์)`;
+        emit();
+      } else {
+        // Increasing volume triggers challenge
+        if (!state.library) {
+          state.volume = target;
+          emit();
+        } else {
+          // If library mode is on, trigger challenge
+          emit();
+        }
+      }
     },
     startChallenge() {
-      if (!interactive() || !state.library || state.challenge || state.requestedVolume === state.volume) return false;
-      state.challenge = { target: state.requestedVolume, phrase: volumePhrase(state.requestedVolume), draft: '' };
-      state.feedback = 'พิมพ์ให้ตรงกับข้อความ ภายใน 10 วินาที';
-      challengeTimer = new PausableTimer(() => {
-        challengeTimer = null;
-        finishChallenge(false, 'หมดเวลา · คงระดับเดิมไว้ ลองใหม่ได้');
-      }, 10000, options);
-      emit();
-      syncTick();
-      return true;
+      if (!interactive() || !state.library || state.challenge || state.requestedVolume <= state.volume) return false;
+      return triggerChallenge(state.requestedVolume);
     },
     setChallengeDraft(value) { if (interactive() && state.challenge) { state.challenge.draft = value; emit(); } },
     submitChallenge() {
@@ -154,7 +177,7 @@ export function createMusic({ clock, timers, canInteract = () => true, onStatus 
     refs.title.textContent = state.track.title;
     refs.artist.textContent = `${state.track.artist} · ${state.track.album}`;
     refs.cover.dataset.cover = state.track.cover;
-    refs.play.textContent = state.playing ? 'หยุดความเงียบ' : 'เล่นความเงียบ';
+    refs.play.textContent = state.playing ? 'หยุดเพลง' : 'เล่นเพลง';
     refs.play.setAttribute('aria-pressed', String(state.playing));
     refs.progress.max = state.track.duration;
     refs.progress.value = state.elapsed;
@@ -162,11 +185,9 @@ export function createMusic({ clock, timers, canInteract = () => true, onStatus 
     refs.volume.textContent = `ดัง ${state.volume}% · ได้ยิน 0%`;
     refs.requested.textContent = `${state.requestedVolume}%`;
     refs.range.value = state.requestedVolume;
-    refs.library.checked = state.library;
+    refs.library.checked = true; // Always stays checked
     refs.range.disabled = Boolean(state.challenge);
-    refs.library.disabled = Boolean(state.challenge);
-    refs.challengeStart.hidden = !state.library;
-    refs.challengeStart.disabled = Boolean(state.challenge) || state.requestedVolume === state.volume;
+    refs.challengeStart.hidden = true; // Not needed anymore since it auto-triggers on increase
     refs.challenge.hidden = !state.challenge;
     refs.feedback.textContent = state.feedback;
     if (state.challenge) {
@@ -182,9 +203,9 @@ export function createMusic({ clock, timers, canInteract = () => true, onStatus 
       root = container.ownerDocument.createElement('section');
       root.className = 'feature music-feature';
       root.innerHTML = `
-        <div class="feature-heading"><div><p class="feature-kicker">NO-FI / เงียบแบบมีคุณภาพ</p><h2>เพลงเงียบ</h2><p class="muted">เพลงสำหรับคนที่อยากฟัง แต่ไม่อยากได้ยิน</p></div><span class="silent-badge">SILENT · 0 dB</span></div>
-        <div class="music-layout"><section class="panel silent-player" aria-label="เครื่องเล่นเพลงเงียบ"><div class="album-cover" data-music="cover" data-cover="rain" role="img" aria-label="ปกอัลบั้ม NO-FI"><span class="album-label">วงไม่มีเสียง</span><strong>NO<br>FI<span class="album-period">.</span></strong><span class="album-caption">SOUND OF ABSOLUTELY NOTHING</span></div><h3 data-music="title"></h3><p class="muted" data-music="artist"></p><progress data-music="progress" aria-label="ความคืบหน้าเพลง" max="183" value="0"></progress><p class="muted player-time" data-music="time"></p><div class="feature-actions player-actions"><button class="button button-primary" data-music="play" type="button">เล่นความเงียบ</button><button class="button" data-music="next" type="button">เพลงถัดไป →</button></div><p class="volume-readout" data-music="volume" aria-live="polite"></p></section>
-        <aside class="music-sidebar"><section class="panel playlist"><h3>เงียบแบบมีคุณภาพ</h3><p class="muted">3 เพลง · ไม่มีเสียงทุกเพลง</p><ol data-music="tracks" class="track-list"></ol></section><section class="panel volume-panel"><h3>เพิ่มความเงียบ</h3><label class="volume-label" for="music-volume">ระดับที่ต้องการ <output data-music="requested" for="music-volume"></output></label><input id="music-volume" data-music="range" type="range" min="0" max="100" value="35"><label class="check-field"><input data-music="library" type="checkbox"> โหมดห้องสมุด</label><p class="muted">ในห้องสมุด ต้องพิมพ์เพื่อปรับระดับภายใน 10 วินาที</p><button class="button button-primary" data-music="start" type="button" hidden>พิมพ์ให้ดัง</button></section></aside></div>
+        <div class="feature-heading"><div><p class="feature-kicker">STUPID MUSIC / ฟังเพลินแบบเงียบกริบ</p><h2>Stupid music</h2><p class="muted">เพลงสำหรับคนที่อยากฟัง แต่ไม่อยากให้ใครได้ยิน (โดยเฉพาะหัวหน้า)</p></div><span class="silent-badge">SILENT · 0 dB</span></div>
+        <div class="music-layout"><section class="panel silent-player" aria-label="เครื่องเล่นเพลง Stupid music"><div class="album-cover" data-music="cover" data-cover="rain" role="img" aria-label="ปกอัลบั้ม Stupid music"><span class="album-label">STUPID MUSIC</span><strong>STUPID<br>MUSIC<span class="album-period">.</span></strong><span class="album-caption">SOUND OF ABSOLUTELY NOTHING</span></div><h3 data-music="title"></h3><p class="muted" data-music="artist"></p><progress data-music="progress" aria-label="ความคืบหน้าเพลง" max="183" value="0"></progress><p class="muted player-time" data-music="time"></p><div class="feature-actions player-actions"><button class="button button-primary" data-music="play" type="button">เล่นเพลง</button><button class="button" data-music="next" type="button">เพลงถัดไป →</button></div><p class="volume-readout" data-music="volume" aria-live="polite"></p></section>
+        <aside class="music-sidebar"><section class="panel playlist"><h3>รวมฮิตทุกแนวเพลง</h3><p class="muted">${TRACKS.length} เพลง · ไม่มีเสียงทุกเพลง (0 dB)</p><ol data-music="tracks" class="track-list"></ol></section><section class="panel volume-panel"><h3>เพิ่มลดเสียง</h3><label class="volume-label" for="music-volume">ระดับที่ต้องการ <output data-music="requested" for="music-volume"></output></label><input id="music-volume" data-music="range" type="range" min="0" max="100" value="35"><div class="evasive-box-container"><label class="check-field evasive-library-label" data-music="evasive-label"><input data-music="library" type="checkbox" checked> โหมดห้องสมุด (เปิดตลอดกาล)</label></div><p class="muted">ในห้องสมุด เพิ่มเสียงต้องพิมพ์ให้ทันภายใน 10 วินาที (ลดเสียงได้ทันทีไม่ต้องพิมพ์)</p><button class="button button-primary" data-music="start" type="button" hidden>พิมพ์ให้ดัง</button></section></aside></div>
         <section class="panel typing-challenge" data-music="challenge" aria-labelledby="music-challenge-title" hidden><div class="feature-heading"><h3 id="music-challenge-title">พิมพ์ให้ดัง</h3><span class="challenge-countdown" data-music="remaining" role="timer"></span></div><p class="challenge-phrase" data-music="phrase" id="music-challenge-phrase"></p><form data-music="challenge-form"><label for="music-challenge-draft">พิมพ์ข้อความด้านบนให้ตรง</label><textarea id="music-challenge-draft" class="field" data-music="draft" rows="2" autocomplete="off" spellcheck="false" aria-describedby="music-challenge-phrase"></textarea><div class="feature-actions"><button class="button button-primary" type="submit">ยืนยันระดับเสียง</button><button class="button" data-music="cancel" type="button">ยกเลิก</button></div></form></section><p class="feature-feedback" data-music="feedback" role="status"></p>`;
       container.append(root);
       const q = (name) => root.querySelector(`[data-music="${name}"]`);
@@ -197,18 +218,80 @@ export function createMusic({ clock, timers, canInteract = () => true, onStatus 
         title.textContent = `${String(index + 1).padStart(2, '0')}  ${track.title}`;
         const subtitle = root.ownerDocument.createElement('span');
         subtitle.className = 'muted';
-        subtitle.textContent = `${track.artist} · ${formatTrackTime(track.duration)}`;
+        subtitle.textContent = `${track.artist} · ${track.genre || track.album} · ${formatTrackTime(track.duration)}`;
         button.append(title, subtitle);
         item.append(button);
         q('tracks').append(item);
         listen(button, 'click', () => model.selectTrack(index));
         return button;
       });
-      refs = { title: q('title'), artist: q('artist'), cover: q('cover'), play: q('play'), progress: q('progress'), time: q('time'), volume: q('volume'), requested: q('requested'), range: q('range'), library: q('library'), challengeStart: q('start'), challenge: q('challenge'), feedback: q('feedback'), phrase: q('phrase'), remaining: q('remaining'), draft: q('draft'), trackButtons };
-      listen(refs.play, 'click', () => { model.togglePlay(); onStatus('เพลงเงียบ · ได้ยิน 0%'); });
+      refs = { title: q('title'), artist: q('artist'), cover: q('cover'), play: q('play'), progress: q('progress'), time: q('time'), volume: q('volume'), requested: q('requested'), range: q('range'), library: q('library'), evasiveLabel: q('evasive-label'), challengeStart: q('start'), challenge: q('challenge'), feedback: q('feedback'), phrase: q('phrase'), remaining: q('remaining'), draft: q('draft'), trackButtons };
+      listen(refs.play, 'click', () => { model.togglePlay(); onStatus('Stupid music · ได้ยิน 0%'); });
       listen(q('next'), 'click', () => model.nextTrack());
-      listen(refs.range, 'input', () => model.requestVolume(refs.range.value));
-      listen(refs.library, 'change', () => model.setLibrary(refs.library.checked));
+      // Drag freely on input
+      listen(refs.range, 'input', () => {
+        const targetVal = Number(refs.range.value);
+        const currentVol = model.getState().volume;
+        if (targetVal <= currentVol) {
+          // Decreasing volume happens instantly
+          model.requestVolume(targetVal);
+        } else {
+          // Increasing volume: update displayed value and preview during drag without triggering challenge yet
+          model.requestVolume(targetVal);
+        }
+      });
+
+      // Trigger challenge only upon releasing mouse / pointer / change
+      const commitIncreaseChallenge = () => {
+        const targetVal = Number(refs.range.value);
+        const currentVol = model.getState().volume;
+        if (targetVal > currentVol && !model.getState().challenge) {
+          model.startChallenge();
+          if (refs.draft) setTimeout(() => refs.draft?.focus(), 50);
+        }
+      };
+
+      listen(refs.range, 'change', commitIncreaseChallenge);
+      listen(refs.range, 'mouseup', commitIncreaseChallenge);
+      listen(refs.range, 'touchend', commitIncreaseChallenge);
+      listen(refs.range, 'pointerup', commitIncreaseChallenge);
+      listen(refs.range, 'keyup', (e) => {
+        if (['ArrowRight', 'ArrowUp', 'PageUp', 'End'].includes(e.key)) {
+          commitIncreaseChallenge();
+        }
+      });
+
+      // Fleeing evasion on library checkbox
+      const evasiveEl = refs.evasiveLabel;
+      if (evasiveEl) {
+        let posX = 0;
+        let posY = 0;
+        const dodge = (e) => {
+          e.preventDefault?.();
+          // Generate new random offset jumping away from cursor
+          const jumpX = (Math.random() > 0.5 ? 1 : -1) * (50 + Math.random() * 70);
+          const jumpY = (Math.random() > 0.5 ? 1 : -1) * (25 + Math.random() * 40);
+          posX = Math.max(-120, Math.min(120, posX + jumpX));
+          posY = Math.max(-50, Math.min(50, posY + jumpY));
+          evasiveEl.style.transform = `translate(${posX}px, ${posY}px)`;
+          evasiveEl.style.transition = 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        };
+        listen(evasiveEl, 'mouseenter', dodge);
+        listen(evasiveEl, 'pointermove', dodge);
+        listen(evasiveEl, 'touchstart', dodge);
+        listen(evasiveEl, 'click', (e) => {
+          e.preventDefault();
+          dodge(e);
+          refs.library.checked = true;
+          model.setLibrary(true);
+        });
+      }
+
+      listen(refs.library, 'change', (e) => {
+        e.preventDefault();
+        refs.library.checked = true;
+        model.setLibrary(true);
+      });
       listen(refs.challengeStart, 'click', () => { if (model.startChallenge()) refs.draft.focus(); });
       listen(refs.draft, 'input', () => model.setChallengeDraft(refs.draft.value));
       listen(q('challenge-form'), 'submit', (event) => { event.preventDefault(); model.submitChallenge(); });

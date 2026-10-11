@@ -29,9 +29,18 @@
 .silent-badge { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-alt); padding: .45rem .8rem; color: var(--muted); white-space: nowrap; font-size: .72rem; font-weight: 700; letter-spacing: .1em; }
 .music-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(260px, 1fr); gap: 1.2rem; align-items: start; }
 .silent-player { padding: 1.4rem; text-align: center; }
-.album-cover { width: min(100%, 280px); aspect-ratio: 1; margin: 0 auto 1.2rem; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; text-align: left; padding: 1.3rem; overflow: hidden; color: #f5fbf9; background: #345c54; border: 1px solid #2b4943; }
+.album-cover { width: min(100%, 280px); aspect-ratio: 1; margin: 0 auto 1.2rem; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; text-align: left; padding: 1.3rem; overflow: hidden; color: #f5fbf9; background: #345c54; border: 1px solid #2b4943; border-radius: var(--radius); }
 .album-cover[data-cover="meeting"] { background: #3b526f; border-color: #2c405a; }
 .album-cover[data-cover="deadline"] { background: #715846; border-color: #523e30; }
+.album-cover[data-cover="pop"] { background: linear-gradient(135deg, #e11d48, #f43f5e); border-color: #be123c; }
+.album-cover[data-cover="rock"] { background: linear-gradient(135deg, #18181b, #3f3f46); border-color: #27272a; }
+.album-cover[data-cover="kpop"] { background: linear-gradient(135deg, #d946ef, #8b5cf6); border-color: #c026d3; }
+.album-cover[data-cover="anime"] { background: linear-gradient(135deg, #0ea5e9, #6366f1); border-color: #0284c7; }
+.album-cover[data-cover="hiphop"] { background: linear-gradient(135deg, #ea580c, #ca8a04); border-color: #c2410c; }
+.album-cover[data-cover="synthwave"] { background: linear-gradient(135deg, #4c1d95, #c026d3); border-color: #3b0764; }
+.album-cover[data-cover="latin"] { background: linear-gradient(135deg, #f59e0b, #ef4444); border-color: #d97706; }
+.album-cover[data-cover="classical"] { background: linear-gradient(135deg, #334155, #475569); border-color: #1e293b; }
+.album-cover[data-cover="edm"] { background: linear-gradient(135deg, #059669, #0284c7); border-color: #047857; }
 .album-cover > strong { display: block; font-family: Arial, sans-serif; font-size: clamp(3rem, 9vw, 5.4rem); font-weight: 900; line-height: .82; letter-spacing: -.08em; }
 .album-period { color: #dddf8b; }
 .album-label { font-size: .82rem; }
@@ -52,6 +61,32 @@
 .volume-label { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .65rem; font-size: .9rem; }
 .volume-panel input[type="range"] { width: 100%; accent-color: var(--accent); }
 .volume-panel p { font-size: .8rem; }
+.evasive-box-container {
+  position: relative;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  margin: 8px 0;
+}
+.evasive-library-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: not-allowed;
+  user-select: none;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--surface-alt);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  box-shadow: var(--shadow);
+  will-change: transform;
+}
+.evasive-library-label input[type="checkbox"] {
+  pointer-events: none;
+}
 .typing-challenge { margin-top: 1.2rem; padding: 1.2rem; }
 .challenge-countdown { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 700; white-space: nowrap; }
 .challenge-phrase { padding: 1rem; border-left: 3px solid var(--accent); background: var(--surface-alt); line-height: 1.8; overflow-wrap: anywhere; }
@@ -2494,6 +2529,14 @@
   overflow-y: auto;
   user-select: none;
   cursor: default;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bsod-screen::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .bsod-screen[hidden] {
